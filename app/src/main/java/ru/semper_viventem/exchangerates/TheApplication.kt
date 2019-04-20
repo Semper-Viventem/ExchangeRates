@@ -5,7 +5,8 @@ import com.facebook.stetho.Stetho
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
-import ru.semper_viventem.exchangerates.network.NetworkModule
+import ru.semper_viventem.exchangerates.data.gateway.GatewayModule
+import ru.semper_viventem.exchangerates.data.network.NetworkModule
 import ru.semper_viventem.exchangerates.ui.UIModule
 import timber.log.Timber
 
@@ -23,7 +24,7 @@ class TheApplication : Application() {
         startKoin {
             androidContext(this@TheApplication)
             androidLogger()
-            modules(UIModule.module, NetworkModule.module)
+            modules(UIModule.module, NetworkModule.module, GatewayModule.module)
         }
     }
 

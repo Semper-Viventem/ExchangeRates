@@ -1,4 +1,4 @@
-package ru.semper_viventem.exchangerates.network
+package ru.semper_viventem.exchangerates.data.network
 
 import com.facebook.stetho.okhttp3.StethoInterceptor
 import okhttp3.OkHttpClient
