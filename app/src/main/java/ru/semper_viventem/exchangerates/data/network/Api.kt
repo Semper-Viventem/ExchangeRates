@@ -8,5 +8,5 @@ import ru.semper_viventem.exchangerates.data.network.response.ExchangeRatesRespo
 interface Api {
 
     @GET("latest")
-    fun latest(@Query("base") base: String): Single<ExchangeRatesResponse>
+    fun latest(@Query("base") base: String?): Single<ExchangeRatesResponse>
 }

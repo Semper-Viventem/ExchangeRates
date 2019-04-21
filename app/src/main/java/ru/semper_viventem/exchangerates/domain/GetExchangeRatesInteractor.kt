@@ -9,14 +9,19 @@ class GetExchangeRatesInteractor(
     private val currencyDataGateway: CurrencyDataGateway
 ) {
 
-    fun execute(base: CurrencyEntity): Single<List<CurrencyEntity>> = exchangeRatesGateway.getRatesByBaseCurrency(base)
+    companion object {
+        private const val DEFAULT_FACTOR = 1.0
+    }
+
+    fun execute(base: CurrencyEntity?): Single<List<CurrencyEntity>> = exchangeRatesGateway.getRatesByBaseCurrency(base)
         .map { sourceCurrencies ->
             val updatedList = mutableListOf<CurrencyEntity>()
+            val factor = base?.value ?: DEFAULT_FACTOR
 
             sourceCurrencies.forEach {
                 updatedList.add(
                     it.copy(
-                        value = it.value * base.value,
+                        value = it.value * factor,
                         fullName = currencyDataGateway.getNameForCurrency(it).orEmpty(),
                         image = currencyDataGateway.getFlagForCurrency(it)
                     )
