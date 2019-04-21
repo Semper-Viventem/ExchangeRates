@@ -15,6 +15,7 @@ class MainPm(
 
     companion object {
         private const val UPDATE_INTERVAL_MILLISECONDS = 1000L
+        private const val DEFAULT_VALUE = 1.0
     }
 
     val rateAndUpdateTopItem = State(emptyList<CurrencyEntity>() to false)
@@ -46,6 +47,7 @@ class MainPm(
             .untilDestroy()
 
         currencySelected.observable
+            .map { it.copy(value = DEFAULT_VALUE) }
             .subscribe(newBaseCurrencyBuffer.consumer)
             .untilDestroy()
     }
