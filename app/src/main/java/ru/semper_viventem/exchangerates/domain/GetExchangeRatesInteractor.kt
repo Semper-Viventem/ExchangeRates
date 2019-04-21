@@ -17,7 +17,8 @@ class GetExchangeRatesInteractor(
                 updatedList.add(
                     it.copy(
                         value = it.value * base.value,
-                        fullName = currencyDataGateway.getNameForCurrency(it).orEmpty()
+                        fullName = currencyDataGateway.getNameForCurrency(it).orEmpty(),
+                        image = currencyDataGateway.getFlagForCurrency(it)
                     )
                 )
             }

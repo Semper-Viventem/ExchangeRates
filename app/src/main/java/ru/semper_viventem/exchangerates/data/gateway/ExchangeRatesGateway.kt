@@ -22,7 +22,7 @@ class ExchangeRatesGateway(
                 name = currencyName,
                 fullName = "",
                 value = currencyValue,
-                imageRes = null
+                image = null
             )
         }
     }

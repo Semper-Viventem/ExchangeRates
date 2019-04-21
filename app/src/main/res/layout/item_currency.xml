@@ -12,12 +12,13 @@
         android:id="@+id/currencyImage"
         android:layout_width="@dimen/currency_image_size"
         android:layout_height="@dimen/currency_image_size"
-        android:layout_marginBottom="@dimen/small_gap"
+        android:layout_marginBottom="@dimen/normal_gap"
         android:layout_marginStart="@dimen/normal_gap"
-        android:layout_marginTop="@dimen/small_gap"
+        android:layout_marginTop="@dimen/normal_gap"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0"
         tools:src="@drawable/currency_placeholder"/>
 
     <TextView
@@ -27,18 +28,20 @@
         android:layout_marginStart="@dimen/normal_gap"
         android:textColor="@color/black"
         android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="@id/currencyImage"
         app:layout_constraintStart_toEndOf="@id/currencyImage"
-        app:layout_constraintTop_toTopOf="@id/currencyImage"
         tools:text="USD"/>
 
     <TextView
         android:id="@+id/fullName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/normal_gap"
         android:layout_marginStart="@dimen/normal_gap"
         android:layout_marginTop="@dimen/small_gap"
-        app:layout_constraintStart_toEndOf="@id/currencyImage"
-        app:layout_constraintTop_toBottomOf="@id/name"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/currencyImage"
         tools:text="United states dollar"/>
 
     <androidx.constraintlayout.widget.Barrier
@@ -50,7 +53,7 @@
 
     <EditText
         android:id="@+id/valueEditText"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/normal_gap"
         android:layout_marginStart="@dimen/normal_gap"

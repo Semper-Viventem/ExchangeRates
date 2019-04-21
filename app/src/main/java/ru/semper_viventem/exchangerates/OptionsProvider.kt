@@ -8,6 +8,6 @@ object OptionsProvider {
         name = "EUR",
         fullName = "Euro",
         value = 1.0,
-        imageRes = null
+        image = "file:///android_asset/flags/eur.png"
     )
 }
