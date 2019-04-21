@@ -18,7 +18,7 @@ class CurrenciesAdapter(
     private val baseValueChangeListener: (text: String) -> Unit
 ) : RecyclerView.Adapter<CurrenciesAdapter.ViewHolder>() {
 
-    private var items: List<MainPm.CurrencyListItem> = listOf()
+    private var items: List<CurrencyEntity> = listOf()
     private var needToShowKeyboard: Boolean = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
@@ -30,7 +30,7 @@ class CurrenciesAdapter(
 
     override fun getItemCount(): Int = items.size
 
-    fun setData(data: List<MainPm.CurrencyListItem>, refreshBaseCurrency: Boolean) {
+    fun setData(data: List<CurrencyEntity>, refreshBaseCurrency: Boolean) {
         if (refreshBaseCurrency) {
             updateDataAndRefreshBaseCurrency(data)
         } else {
@@ -38,7 +38,7 @@ class CurrenciesAdapter(
         }
     }
 
-    private fun updateDataAndRefreshBaseCurrency(data: List<MainPm.CurrencyListItem>) {
+    private fun updateDataAndRefreshBaseCurrency(data: List<CurrencyEntity>) {
         needToShowKeyboard = true
         val diffUtil = DiffUtil.calculateDiff(DiffUtilCallback(items, data))
         items = data
@@ -46,7 +46,7 @@ class CurrenciesAdapter(
         notifyItemChanged(0)
     }
 
-    private fun updateAllData(data: List<MainPm.CurrencyListItem>) {
+    private fun updateAllData(data: List<CurrencyEntity>) {
         val refreshAllData = items.isEmpty()
         items = data
 
@@ -59,51 +59,56 @@ class CurrenciesAdapter(
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
-        private lateinit var item: MainPm.CurrencyListItem
+        private lateinit var item: CurrencyEntity
+        private val changedListener = object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                // do nothing
+            }
 
-        init {
-            itemView.setOnClickListener { currencySelected.invoke(item.currency) }
-            itemView.valueEditText.setOnFocusChangeListener { _, hasFocus ->
-                if (hasFocus) {
-                    currencySelected.invoke(item.currency)
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // do nothing
+            }
+
+            override fun onTextChanged(text: CharSequence, start: Int, before: Int, count: Int) {
+                if (item.isBase) {
+                    baseValueChangeListener.invoke(text.toString())
                 }
             }
-            itemView.valueEditText.addTextChangedListener(object : TextWatcher {
-                override fun afterTextChanged(s: Editable?) {
-                    // do nothing
-                }
 
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                    // do nothing
-                }
-
-                override fun onTextChanged(text: CharSequence, start: Int, before: Int, count: Int) {
-                    if (item.isBaseCurrency) {
-                        baseValueChangeListener.invoke(text.toString())
-                    }
-                }
-
-            })
         }
 
-        fun bind(currencyEntity: MainPm.CurrencyListItem) {
+        init {
+            itemView.setOnClickListener { currencySelected.invoke(item) }
+            itemView.valueEditText.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    currencySelected.invoke(item)
+                }
+            }
+        }
+
+        fun bind(currencyEntity: CurrencyEntity) {
             this.item = currencyEntity
             with(itemView) {
-                name.text = item.currency.name
-                fullName.text = item.currency.fullName
-                valueEditText.setText(context.getString(R.string.currency_format, item.currency.value))
-                currencyImage.load(item.currency.image, true, R.drawable.currency_placeholder)
-                if (needToShowKeyboard && item.isBaseCurrency) {
+                name.text = item.name
+                fullName.text = item.fullName
+                valueEditText.setText(context.getString(R.string.currency_format, item.value))
+                currencyImage.load(item.image, true, R.drawable.currency_placeholder)
+                if (needToShowKeyboard && item.isBase) {
                     valueEditText.showKeyboard()
                     needToShowKeyboard = false
+                }
+                if (item.isBase) {
+                    valueEditText.addTextChangedListener(changedListener)
+                } else {
+                    valueEditText.removeTextChangedListener(changedListener)
                 }
             }
         }
     }
 
     private class DiffUtilCallback(
-        private val oldItems: List<MainPm.CurrencyListItem>,
-        private val newItems: List<MainPm.CurrencyListItem>
+        private val oldItems: List<CurrencyEntity>,
+        private val newItems: List<CurrencyEntity>
     ) : DiffUtil.Callback() {
 
         override fun getOldListSize(): Int = oldItems.size
@@ -111,10 +116,10 @@ class CurrenciesAdapter(
         override fun getNewListSize(): Int = newItems.size
 
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-            oldItems[oldItemPosition].currency.isSameCurrency(newItems[newItemPosition].currency)
+            oldItems[oldItemPosition].isSameCurrency(newItems[newItemPosition])
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-            oldItems[oldItemPosition].currency.isSameCurrency(newItems[newItemPosition].currency)
+            oldItems[oldItemPosition].isSameCurrency(newItems[newItemPosition])
 
     }
 }

@@ -13,17 +13,16 @@ class ExchangeRatesGateway(
     fun getRatesByBaseCurrency(baseCurrency: CurrencyEntity?): Single<List<CurrencyEntity>> {
         return api.latest(baseCurrency?.name)
             .subscribeOn(Schedulers.io())
-            .map { extractCurrencies(it) }
+            .map { extractCurrencies(it, baseCurrency) }
     }
 
-    private fun extractCurrencies(exchangeRatesResponse: ExchangeRatesResponse): List<CurrencyEntity> {
-        val baseCurrency = CurrencyEntity(exchangeRatesResponse.base)
+    private fun extractCurrencies(exchangeRatesResponse: ExchangeRatesResponse, base: CurrencyEntity?): List<CurrencyEntity> {
+        val baseCurrency = base
+            ?: CurrencyEntity(name = exchangeRatesResponse.base, isBase = true)
         val rates = exchangeRatesResponse.ratesResponse.rates.map { (currencyName, currencyValue) ->
             CurrencyEntity(
                 name = currencyName,
-                fullName = "",
-                value = currencyValue,
-                image = null
+                value = currencyValue
             )
         }
         return listOf(baseCurrency) + rates
