@@ -7,4 +7,14 @@
     <string name="cad">Canadian Dollar</string>
     <string name="jby">Japanese Yen</string>
     <string name="gbp">British Pound</string>
+    <string name="chf">Switzerland Frank</string>
+    <string name="afn">Afghanistan Afghani</string>
+    <string name="all">Albania Lek</string>
+    <string name="bgn">Bulgaria Lev</string>
+    <string name="brl">Brazil Real</string>
+    <string name="cny">China Yan</string>
+    <string name="dkk">Denmark Krone</string>
+    <string name="hkd">Hong Kong Dollar</string>
+    <string name="hrk">Croatia Kuna</string>
+    <string name="huf">Hangary Forint</string>
 </resources>

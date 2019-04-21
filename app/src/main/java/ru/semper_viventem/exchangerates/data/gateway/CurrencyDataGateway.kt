@@ -23,7 +23,17 @@ class CurrencyDataGateway(
         "CAD" to R.string.cad,
         "CZK" to R.string.czk,
         "AUD" to R.string.aud,
-        "EUR" to R.string.eur
+        "EUR" to R.string.eur,
+        "CHF" to R.string.chf,
+        "AFN" to R.string.afn,
+        "ALL" to R.string.all,
+        "BGN" to R.string.bgn,
+        "BRL" to R.string.brl,
+        "CNY" to R.string.cny,
+        "DKK" to R.string.dkk,
+        "HKD" to R.string.hkd,
+        "HRK" to R.string.hrk,
+        "huf" to R.string.huf
     )
 
     init {
