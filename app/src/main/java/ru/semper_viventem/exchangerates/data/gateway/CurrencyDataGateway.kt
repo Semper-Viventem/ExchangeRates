@@ -33,7 +33,7 @@ class CurrencyDataGateway(
         "DKK" to R.string.dkk,
         "HKD" to R.string.hkd,
         "HRK" to R.string.hrk,
-        "huf" to R.string.huf
+        "HUF" to R.string.huf
     )
 
     init {
