@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="usd">US Dollar</string>
+    <string name="aud">Australian Dollar</string>
+    <string name="eur">Euro</string>
+    <string name="czk">Czech Koruna</string>
+    <string name="cad">Canadian Dollar</string>
+    <string name="jby">Japanese Yen</string>
+    <string name="gbp">British Pound</string>
+</resources>
