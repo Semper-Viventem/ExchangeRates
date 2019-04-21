@@ -73,10 +73,10 @@ class CurrenciesAdapter(
         override fun getNewListSize(): Int = newItems.size
 
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-            oldItems[oldItemPosition].name == newItems[newItemPosition].name
+            oldItems[oldItemPosition].isSameCurrency(newItems[newItemPosition])
 
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-            oldItems[oldItemPosition].name == newItems[newItemPosition].name
+            oldItems[oldItemPosition].isSameCurrency(newItems[newItemPosition])
 
     }
 }

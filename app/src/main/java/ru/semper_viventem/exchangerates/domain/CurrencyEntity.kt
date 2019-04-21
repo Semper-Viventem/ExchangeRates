@@ -5,4 +5,8 @@ data class CurrencyEntity(
     val fullName: String,
     val value: Double,
     val imageRes: Int?
-)
+) {
+    fun isSameCurrency(otherCurrency: CurrencyEntity): Boolean {
+        return this.name == otherCurrency.name
+    }
+}
