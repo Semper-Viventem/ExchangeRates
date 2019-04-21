@@ -27,8 +27,11 @@ class MainActivity : PmSupportActivity<MainPm>() {
     }
 
     override fun onBindPresentationModel(pm: MainPm) {
-        pm.rateWithNeedToDiffCalculate bindTo { (rates, needToDiffCalculation) ->
-            currenciesAdapter.setData(rates, needToDiffCalculation)
+        pm.rateAndUpdateTopItem bindTo { (rates, updateTopItem) ->
+            currenciesAdapter.setData(rates, updateTopItem)
+            if (updateTopItem) {
+                recyclerView.scrollToPosition(0)
+            }
         }
     }
 }

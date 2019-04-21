@@ -23,7 +23,7 @@ class MainPm(
         imageRes = null
     )
 
-    val rateWithNeedToDiffCalculate = State(emptyList<CurrencyEntity>() to false)
+    val rateAndUpdateTopItem = State(emptyList<CurrencyEntity>() to false)
     val currencySelected = Action<CurrencyEntity>()
 
     private val timer = Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
@@ -43,7 +43,7 @@ class MainPm(
                     }
                     .doOnSuccess { baseCurrency.consumer.accept(newBase) }
             }
-            .doOnNext(rateWithNeedToDiffCalculate.consumer)
+            .doOnNext(rateAndUpdateTopItem.consumer)
             .doOnError { error -> Timber.e(error) }
             .retry()
             .subscribe()
