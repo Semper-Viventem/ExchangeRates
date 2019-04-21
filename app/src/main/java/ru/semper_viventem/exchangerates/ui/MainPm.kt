@@ -26,15 +26,18 @@ class MainPm(
     val rateAndUpdateTopItem = State(emptyList<CurrencyListItem>() to false)
     val currencySelected = Action<CurrencyEntity>()
     val baseCurrencyInput = Action<String>()
+    val changeScrollState = Action<Boolean>()
 
     private val timer = Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
     private val baseCurrency = State(OptionsProvider.BASE_CURRENCY)
     private val newBaseCurrencyBuffer = State(OptionsProvider.BASE_CURRENCY)
+    private val inScrollState = State(false)
 
     override fun onCreate() {
         super.onCreate()
 
         timer.withLatestFrom(baseCurrency.observable, newBaseCurrencyBuffer.observable) { _, oldBase, newBase -> oldBase to newBase }
+            .filter { !inScrollState.value }
             .flatMapSingle { (oldBase, newBase) ->
                 val needToCalculateDiff = !newBase.isSameCurrency(oldBase)
 
@@ -63,6 +66,10 @@ class MainPm(
                 currency.copy(value = newValue.toDoubleOrNull() ?: DEFAULT_VALUE)
             }
             .subscribe(newBaseCurrencyBuffer.consumer)
+            .untilDestroy()
+
+        changeScrollState.observable
+            .subscribe(inScrollState.consumer)
             .untilDestroy()
     }
 }

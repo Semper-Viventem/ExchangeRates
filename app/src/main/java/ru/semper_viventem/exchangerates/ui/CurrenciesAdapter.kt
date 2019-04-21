@@ -39,15 +39,22 @@ class CurrenciesAdapter(
     }
 
     private fun updateDataAndRefreshBaseCurrency(data: List<MainPm.CurrencyListItem>) {
+        needToShowKeyboard = true
         val diffUtil = DiffUtil.calculateDiff(DiffUtilCallback(items, data))
         items = data
         diffUtil.dispatchUpdatesTo(this)
-        needToShowKeyboard = true
+        notifyItemChanged(0)
     }
 
     private fun updateAllData(data: List<MainPm.CurrencyListItem>) {
+        val refreshAllData = items.isEmpty()
         items = data
-        notifyDataSetChanged()
+
+        if (refreshAllData) {
+            notifyDataSetChanged()
+        } else {
+            notifyItemRangeChanged(1, items.size - 1)
+        }
     }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -56,6 +63,11 @@ class CurrenciesAdapter(
 
         init {
             itemView.setOnClickListener { currencySelected.invoke(item.currency) }
+            itemView.valueEditText.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    currencySelected.invoke(item.currency)
+                }
+            }
             itemView.valueEditText.addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable?) {
                     // do nothing
@@ -80,8 +92,6 @@ class CurrenciesAdapter(
                 name.text = item.currency.name
                 fullName.text = item.currency.fullName
                 valueEditText.setText(context.getString(R.string.currency_format, item.currency.value))
-                valueEditText.isClickable = item.isBaseCurrency
-                valueEditText.isFocusable = item.isBaseCurrency
                 currencyImage.load(item.currency.imageRes, true, R.drawable.currency_placeholder)
                 if (needToShowKeyboard && item.isBaseCurrency) {
                     valueEditText.showKeyboard()
