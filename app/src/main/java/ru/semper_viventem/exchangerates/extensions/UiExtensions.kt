@@ -1,8 +1,10 @@
 package ru.semper_viventem.exchangerates.extensions
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import androidx.annotation.DrawableRes
 import androidx.annotation.LayoutRes
@@ -29,4 +31,35 @@ fun ImageView.load(
             }
         })
         .into(this)
+}
+
+fun View.showKeyboard() {
+    val function = {
+        if (requestFocus()) {
+            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(this, 0)
+        }
+    }
+
+    function.invoke()
+    post {
+        function.invoke()
+    }
+}
+
+fun View.hideKeyboard() {
+    val function = {
+        clearFocus()
+        val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(windowToken, 0)
+    }
+
+    function.invoke()
+    post {
+        function.invoke()
+    }
+}
+
+fun View.visible(visible: Boolean, useGone: Boolean = true) {
+    this.visibility = if (visible) View.VISIBLE else if (useGone) View.GONE else View.INVISIBLE
 }
