@@ -27,6 +27,8 @@ class MainActivity : PmSupportActivity<MainPm>() {
     }
 
     override fun onBindPresentationModel(pm: MainPm) {
-        pm.rate bindTo { currenciesAdapter.setData(it) }
+        pm.rateWithNeedToDiffCalculate bindTo { (rates, needToDiffCalculation) ->
+            currenciesAdapter.setData(rates, needToDiffCalculation)
+        }
     }
 }
