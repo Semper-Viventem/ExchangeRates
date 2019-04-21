@@ -11,6 +11,7 @@ class MainPm(
 ) : PresentationModel() {
 
     val rate = State<List<CurrencyEntity>>()
+    val currencySelected = Action<CurrencyEntity>()
 
     override fun onCreate() {
         super.onCreate()

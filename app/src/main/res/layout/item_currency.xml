@@ -51,9 +51,10 @@
     <EditText
         android:id="@+id/valueEditText"
         android:layout_width="wrap_content"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_marginEnd="@dimen/normal_gap"
         android:layout_marginStart="@dimen/normal_gap"
+        android:background="@null"
         android:hint="@string/currency_rate_hint"
         android:inputType="number"
         android:textAlignment="textEnd"
@@ -63,6 +64,6 @@
         app:layout_constraintHorizontal_bias="1"
         app:layout_constraintStart_toEndOf="@id/barrier"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="78.92"/>
+        tools:text="73.92"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

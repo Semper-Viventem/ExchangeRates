@@ -13,7 +13,7 @@ class CurrenciesAdapter(
     private val currencySelected: (currency: CurrencyEntity) -> Unit
 ) : RecyclerView.Adapter<CurrenciesAdapter.ViewHolder>() {
 
-    private val items: List<CurrencyEntity> = emptyList()
+    private var items: List<CurrencyEntity> = emptyList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
         ViewHolder(parent.inflate(R.layout.item_currency))
@@ -23,6 +23,11 @@ class CurrenciesAdapter(
     }
 
     override fun getItemCount(): Int = items.size
+
+    fun setData(data: List<CurrencyEntity>) {
+        this.items = data
+        notifyDataSetChanged()
+    }
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
