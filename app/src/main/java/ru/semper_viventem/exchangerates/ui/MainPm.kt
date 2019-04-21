@@ -18,8 +18,14 @@ class MainPm(
         private const val DEFAULT_VALUE = 1.0
     }
 
-    val rateAndUpdateTopItem = State(emptyList<CurrencyEntity>() to false)
+    data class CurrencyListItem(
+        val currency: CurrencyEntity,
+        val isBaseCurrency: Boolean
+    )
+
+    val rateAndUpdateTopItem = State(emptyList<CurrencyListItem>() to false)
     val currencySelected = Action<CurrencyEntity>()
+    val baseCurrencyInput = Action<String>()
 
     private val timer = Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
     private val baseCurrency = State(OptionsProvider.BASE_CURRENCY)
@@ -33,7 +39,8 @@ class MainPm(
                 val needToCalculateDiff = !newBase.isSameCurrency(oldBase)
 
                 getExchangeRatesInteractor.execute(newBase)
-                    .map { (listOf(newBase) + it) to needToCalculateDiff }
+                    .map { it.map { CurrencyListItem(it, false) } }
+                    .map { (listOf(CurrencyListItem(newBase, true)) + it) to needToCalculateDiff }
                     .doOnSuccess {
                         if (needToCalculateDiff) {
                             baseCurrency.consumer.accept(newBase)
@@ -48,6 +55,13 @@ class MainPm(
 
         currencySelected.observable
             .map { it.copy(value = DEFAULT_VALUE) }
+            .subscribe(newBaseCurrencyBuffer.consumer)
+            .untilDestroy()
+
+        baseCurrencyInput.observable
+            .withLatestFrom(baseCurrency.observable) { newValue, currency ->
+                currency.copy(value = newValue.toDoubleOrNull() ?: DEFAULT_VALUE)
+            }
             .subscribe(newBaseCurrencyBuffer.consumer)
             .untilDestroy()
     }

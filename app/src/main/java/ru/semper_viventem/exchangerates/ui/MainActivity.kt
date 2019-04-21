@@ -11,9 +11,13 @@ class MainActivity : PmSupportActivity<MainPm>() {
 
     override fun providePresentationModel(): MainPm = getKoin().get()
 
-    private val currenciesAdapter = CurrenciesAdapter { currency ->
-        currency passTo presentationModel.currencySelected.consumer
-    }
+    private val currenciesAdapter = CurrenciesAdapter(
+        currencySelected = { currency ->
+            currency passTo presentationModel.currencySelected.consumer
+        },
+        baseValueChangeListener = { text ->
+            text passTo presentationModel.baseCurrencyInput.consumer
+        })
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

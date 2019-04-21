@@ -8,4 +8,17 @@ class GetExchangeRatesInteractor(
 ) {
 
     fun execute(base: CurrencyEntity): Single<List<CurrencyEntity>> = exchangeRatesGateway.getRatesByBaseCurrency(base)
+        .map { sourceCurrencies ->
+            val updatedList = mutableListOf<CurrencyEntity>()
+
+            sourceCurrencies.forEach {
+                updatedList.add(
+                    it.copy(
+                        value = it.value * base.value
+                    )
+                )
+            }
+
+            updatedList
+        }
 }
