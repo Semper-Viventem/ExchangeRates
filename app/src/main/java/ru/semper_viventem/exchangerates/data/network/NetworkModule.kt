@@ -34,7 +34,7 @@ object NetworkModule {
 
         single {
             GsonBuilder()
-                .registerTypeAdapter(AllRatesResponse::class.java, RatesToListDeerializer())
+                .registerTypeAdapter(AllRatesResponse::class.java, RatesToListDeserializer())
                 .create()
         }
     }

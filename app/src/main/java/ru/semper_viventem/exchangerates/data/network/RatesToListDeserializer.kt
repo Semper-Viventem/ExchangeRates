@@ -6,7 +6,7 @@ import com.google.gson.JsonElement
 import ru.semper_viventem.exchangerates.data.network.response.AllRatesResponse
 import java.lang.reflect.Type
 
-class RatesToListDeerializer : JsonDeserializer<AllRatesResponse> {
+class RatesToListDeserializer : JsonDeserializer<AllRatesResponse> {
 
     override fun deserialize(json: JsonElement?, typeOfT: Type?, context: JsonDeserializationContext?): AllRatesResponse? {
         if (json == null) return null
