@@ -30,25 +30,18 @@ class MainPm(
 
     private val timer = Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
     private val baseCurrency = State(OptionsProvider.BASE_CURRENCY)
-    private val newBaseCurrencyBuffer = State(OptionsProvider.BASE_CURRENCY)
     private val inScrollState = State(false)
 
     override fun onCreate() {
         super.onCreate()
 
-        timer.withLatestFrom(baseCurrency.observable, newBaseCurrencyBuffer.observable) { _, oldBase, newBase -> oldBase to newBase }
+        timer.withLatestFrom(baseCurrency.observable) { _, base -> base }
             .filter { !inScrollState.value }
-            .flatMapSingle { (oldBase, newBase) ->
-                val needToCalculateDiff = !newBase.isSameCurrency(oldBase)
+            .flatMapSingle { base ->
 
-                getExchangeRatesInteractor.execute(newBase)
+                getExchangeRatesInteractor.execute(base)
                     .map { it.map { CurrencyListItem(it, false) } }
-                    .map { (listOf(CurrencyListItem(newBase, true)) + it) to needToCalculateDiff }
-                    .doOnSuccess {
-                        if (needToCalculateDiff) {
-                            baseCurrency.consumer.accept(newBase)
-                        }
-                    }
+                    .map { (listOf(CurrencyListItem(base, true)) + it) to false }
             }
             .doOnNext(rateAndUpdateTopItem.consumer)
             .doOnError { error -> Timber.e(error) }
@@ -58,14 +51,34 @@ class MainPm(
 
         currencySelected.observable
             .map { it.copy(value = DEFAULT_VALUE) }
-            .subscribe(newBaseCurrencyBuffer.consumer)
+            .withLatestFrom(baseCurrency.observable, rateAndUpdateTopItem.observable) { newBase, oldBase, rate ->
+                Triple(newBase, oldBase, rate)
+            }
+            .doOnNext { (newBase, _, _) ->
+                baseCurrency.consumer.accept(newBase)
+            }
+            .filter { (newBase, oldBase, _) ->
+                !newBase.isSameCurrency(oldBase)
+            }
+            .map { (newBase, _, rate) ->
+                val currencyItems = rate.first
+                    .map { it.currency }
+                    .filter { !it.isSameCurrency(newBase) }
+                    .sortedBy { it.name }
+                    .map { CurrencyListItem(it, false) }
+
+                val firstCurrencyItem = CurrencyListItem(newBase, true)
+
+                (listOf(firstCurrencyItem) + currencyItems) to true
+            }
+            .subscribe(rateAndUpdateTopItem.consumer)
             .untilDestroy()
 
         baseCurrencyInput.observable
             .withLatestFrom(baseCurrency.observable) { newValue, currency ->
                 currency.copy(value = newValue.toDoubleOrNull() ?: DEFAULT_VALUE)
             }
-            .subscribe(newBaseCurrencyBuffer.consumer)
+            .subscribe(baseCurrency.consumer)
             .untilDestroy()
 
         changeScrollState.observable
