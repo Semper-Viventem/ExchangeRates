@@ -16,7 +16,7 @@ class MainPm(
         private const val UPDATE_INTERVAL_MILLISECONDS = 1000L
     }
 
-    val rateAndUpdateTopItem = State(emptyList<CurrencyEntity>() to true)
+    val rateAndUpdateTopItem = State(emptyList<CurrencyEntity>() to false)
     val currencySelected = Action<CurrencyEntity>()
     val baseCurrencyInput = Action<String>()
     val changeScrollState = Action<Boolean>()
