@@ -17,11 +17,11 @@ class ExchangeRatesGateway(
     }
 
     private fun extractCurrencies(exchangeRatesResponse: ExchangeRatesResponse): List<CurrencyEntity> {
-        return (0..10).map {
+        return exchangeRatesResponse.ratesResponse.rates.map { (currencyName, currencyValue) ->
             CurrencyEntity(
-                name = "EUR",
-                fullName = "Euro",
-                value = Math.random() * 100,
+                name = currencyName,
+                fullName = "",
+                value = currencyValue,
                 imageRes = null
             )
         }
