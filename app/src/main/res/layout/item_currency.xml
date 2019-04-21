@@ -44,13 +44,6 @@
         app:layout_constraintTop_toBottomOf="@id/currencyImage"
         tools:text="United states dollar"/>
 
-    <androidx.constraintlayout.widget.Barrier
-        android:id="@+id/barrier"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:barrierDirection="right"
-        app:constraint_referenced_ids="fullName,name"/>
-
     <EditText
         android:id="@+id/valueEditText"
         android:layout_width="wrap_content"
@@ -58,6 +51,7 @@
         android:layout_marginEnd="@dimen/normal_gap"
         android:layout_marginStart="@dimen/normal_gap"
         android:background="@null"
+        android:maxWidth="200dp"
         android:hint="@string/currency_rate_hint"
         android:inputType="numberDecimal"
         android:textAlignment="textEnd"
@@ -65,8 +59,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1"
-        app:layout_constraintStart_toEndOf="@id/barrier"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="73.92"/>
+        tools:text="74.92"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
