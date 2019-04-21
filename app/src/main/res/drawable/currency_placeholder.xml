@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/black_translucent_38"/>
+        </shape>
+    </item>
+    <item
+        android:bottom="@dimen/small_gap"
+        android:drawable="@drawable/ic_euro"
+        android:left="@dimen/small_gap"
+        android:right="@dimen/small_gap"
+        android:top="@dimen/small_gap">
+
+    </item>
+</layer-list>

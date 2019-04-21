@@ -4,5 +4,5 @@ data class CurrencyEntity(
     val name: String,
     val fullName: String,
     val value: Double,
-    val imageRes: Int
+    val imageRes: Int?
 )
