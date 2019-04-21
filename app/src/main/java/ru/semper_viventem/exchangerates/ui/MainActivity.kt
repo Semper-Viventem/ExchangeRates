@@ -1,6 +1,7 @@
 package ru.semper_viventem.exchangerates.ui
 
 import android.os.Bundle
+import androidx.core.view.size
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -9,6 +10,7 @@ import me.dmdev.rxpm.base.PmSupportActivity
 import org.koin.android.ext.android.getKoin
 import ru.semper_viventem.exchangerates.R
 import ru.semper_viventem.exchangerates.extensions.hideKeyboard
+import ru.semper_viventem.exchangerates.extensions.visible
 
 class MainActivity : PmSupportActivity<MainPm>() {
 
@@ -57,6 +59,7 @@ class MainActivity : PmSupportActivity<MainPm>() {
             if (updateTopItem) {
                 recyclerView.scrollToPosition(0)
             }
+            progress.visible(rates.isEmpty() && recyclerView.size == 0)
         }
     }
 }

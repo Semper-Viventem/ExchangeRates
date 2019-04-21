@@ -59,3 +59,7 @@ fun View.hideKeyboard() {
         function.invoke()
     }
 }
+
+fun View.visible(visible: Boolean, useGone: Boolean = true) {
+    this.visibility = if (visible) View.VISIBLE else if (useGone) View.GONE else View.INVISIBLE
+}
