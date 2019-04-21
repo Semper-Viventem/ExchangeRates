@@ -14,15 +14,9 @@ class MainPm(
 
     companion object {
         private const val UPDATE_INTERVAL_MILLISECONDS = 1000L
-        private const val DEFAULT_VALUE = 1.0
     }
 
-    data class CurrencyListItem(
-        val currency: CurrencyEntity,
-        val isBaseCurrency: Boolean
-    )
-
-    val rateAndUpdateTopItem = State(emptyList<CurrencyListItem>() to false)
+    val rateAndUpdateTopItem = State(emptyList<CurrencyEntity>() to true)
     val currencySelected = Action<CurrencyEntity>()
     val baseCurrencyInput = Action<String>()
     val changeScrollState = Action<Boolean>()
@@ -41,7 +35,6 @@ class MainPm(
                     .doOnSuccess {
                         baseCurrency.consumer.accept(it.first())
                     }
-                    .map { mapCurrencyEntities(it) }
                     .map { it to false }
             }
             .doOnNext(rateAndUpdateTopItem.consumer)
@@ -51,27 +44,28 @@ class MainPm(
             .untilDestroy()
 
         currencySelected.observable
-            .map { it.copy(value = DEFAULT_VALUE) }
+            .filter { newBase ->
+                baseCurrency.valueOrNull?.isSameCurrency(newBase) == false
+            }
+            .map { it.copy(value = CurrencyEntity.DEFAULT_CURRENCY_VALUE, isBase = true) }
             .withLatestFrom(baseCurrency.observable, rateAndUpdateTopItem.observable) { newBase, oldBase, rate ->
                 Triple(newBase, oldBase, rate)
             }
             .doOnNext { (newBase, _, _) ->
                 baseCurrency.consumer.accept(newBase)
             }
-            .filter { (newBase, oldBase, _) ->
-                !newBase.isSameCurrency(oldBase)
-            }
             .map { (newBase, _, rate) ->
                 val currencyItems = getCurrencyListWithoutBase(rate.first, newBase)
-                val firstCurrencyItem = CurrencyListItem(newBase, true)
-                (listOf(firstCurrencyItem) + currencyItems) to true
+                (listOf(newBase) + currencyItems) to true
             }
             .subscribe(rateAndUpdateTopItem.consumer)
             .untilDestroy()
 
         baseCurrencyInput.observable
             .withLatestFrom(baseCurrency.observable) { newValue, currency ->
-                currency.copy(value = newValue.toDoubleOrNull() ?: DEFAULT_VALUE)
+                currency.copy(
+                    value = newValue.toDoubleOrNull() ?: CurrencyEntity.DEFAULT_CURRENCY_VALUE
+                )
             }
             .subscribe(baseCurrency.consumer)
             .untilDestroy()
@@ -81,20 +75,10 @@ class MainPm(
             .untilDestroy()
     }
 
-    private fun mapCurrencyEntities(currencies: List<CurrencyEntity>): List<CurrencyListItem> {
-        return currencies.mapIndexed { i, currency ->
-            getCurrencyListItem(currency, i)
-        }
-    }
-
-    private fun getCurrencyListItem(currency: CurrencyEntity, position: Int): CurrencyListItem {
-        return CurrencyListItem(currency, position == 0)
-    }
-
-    private fun getCurrencyListWithoutBase(allCurrency: List<CurrencyListItem>, baseCurrency: CurrencyEntity): List<CurrencyListItem> {
+    private fun getCurrencyListWithoutBase(allCurrency: List<CurrencyEntity>, baseCurrency: CurrencyEntity): List<CurrencyEntity> {
         return allCurrency
-            .map { it.copy(isBaseCurrency = false) }
-            .filter { !it.currency.isSameCurrency(baseCurrency) }
-            .sortedBy { it.currency.name }
+            .map { it.copy(isBase = false) }
+            .filter { !it.isSameCurrency(baseCurrency) }
+            .sortedBy { it.name }
     }
 }
