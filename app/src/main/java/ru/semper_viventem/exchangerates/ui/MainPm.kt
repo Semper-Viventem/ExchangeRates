@@ -62,14 +62,8 @@ class MainPm(
                 !newBase.isSameCurrency(oldBase)
             }
             .map { (newBase, _, rate) ->
-                val currencyItems = rate.first
-                    .map { it.currency }
-                    .filter { !it.isSameCurrency(newBase) }
-                    .sortedBy { it.name }
-                    .map { CurrencyListItem(it, false) }
-
+                val currencyItems = getCurrencyListWithoutBase(rate.first, newBase)
                 val firstCurrencyItem = CurrencyListItem(newBase, true)
-
                 (listOf(firstCurrencyItem) + currencyItems) to true
             }
             .subscribe(rateAndUpdateTopItem.consumer)
@@ -95,5 +89,12 @@ class MainPm(
 
     private fun getCurrencyListItem(currency: CurrencyEntity, position: Int): CurrencyListItem {
         return CurrencyListItem(currency, position == 0)
+    }
+
+    private fun getCurrencyListWithoutBase(allCurrency: List<CurrencyListItem>, baseCurrency: CurrencyEntity): List<CurrencyListItem> {
+        return allCurrency
+            .map { it.copy(isBaseCurrency = false) }
+            .filter { !it.currency.isSameCurrency(baseCurrency) }
+            .sortedBy { it.currency.name }
     }
 }
