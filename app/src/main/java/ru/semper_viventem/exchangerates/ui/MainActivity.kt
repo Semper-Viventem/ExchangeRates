@@ -54,7 +54,7 @@ class MainActivity : PmSupportActivity<MainPm>() {
     }
 
     override fun onBindPresentationModel(pm: MainPm) {
-        pm.rateAndUpdateTopItem bindTo { (rates, updateTopItem) ->
+        pm.rateAndAnimateTopItem bindTo { (rates, updateTopItem) ->
             currenciesAdapter.setData(rates, updateTopItem)
             if (updateTopItem) {
                 recyclerView.scrollToPosition(0)

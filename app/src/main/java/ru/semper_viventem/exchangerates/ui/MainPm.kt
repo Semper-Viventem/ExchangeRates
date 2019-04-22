@@ -16,7 +16,7 @@ class MainPm(
         private const val UPDATE_INTERVAL_MILLISECONDS = 1000L
     }
 
-    val rateAndUpdateTopItem = State(emptyList<CurrencyEntity>() to false)
+    val rateAndAnimateTopItem = State(emptyList<CurrencyEntity>() to false)
     val currencySelected = Action<CurrencyEntity>()
     val baseCurrencyInput = Action<String>()
     val changeScrollState = Action<Boolean>()
@@ -37,28 +37,21 @@ class MainPm(
                     }
                     .map { it to false }
             }
-            .doOnNext(rateAndUpdateTopItem.consumer)
+            .doOnNext(rateAndAnimateTopItem.consumer)
             .doOnError { error -> Timber.e(error) }
             .retry()
             .subscribe()
             .untilDestroy()
 
         currencySelected.observable
-            .filter { newBase ->
-                baseCurrency.valueOrNull?.isSameCurrency(newBase) == false
-            }
-            .map { it.copy(value = CurrencyEntity.DEFAULT_CURRENCY_VALUE, isBase = true) }
-            .withLatestFrom(baseCurrency.observable, rateAndUpdateTopItem.observable) { newBase, oldBase, rate ->
-                Triple(newBase, oldBase, rate)
-            }
-            .doOnNext { (newBase, _, _) ->
-                baseCurrency.consumer.accept(newBase)
-            }
-            .map { (newBase, _, rate) ->
-                val currencyItems = getCurrencyListWithoutBase(rate.first, newBase)
-                (listOf(newBase) + currencyItems) to true
-            }
-            .subscribe(rateAndUpdateTopItem.consumer)
+            .filter(::isDifferentBaseElement)
+            .map(::mapToBaseElement)
+            .doOnNext(baseCurrency.consumer)
+            .withLatestFrom(
+                rateAndAnimateTopItem.observable.map { it.first },
+                ::getUpdatedCurrencyList
+            )
+            .subscribe(rateAndAnimateTopItem.consumer)
             .untilDestroy()
 
         baseCurrencyInput.observable
@@ -75,10 +68,27 @@ class MainPm(
             .untilDestroy()
     }
 
-    private fun getCurrencyListWithoutBase(allCurrency: List<CurrencyEntity>, baseCurrency: CurrencyEntity): List<CurrencyEntity> {
-        return allCurrency
-            .map { it.copy(isBase = false) }
-            .filter { !it.isSameCurrency(baseCurrency) }
+    private fun isDifferentBaseElement(newBase: CurrencyEntity): Boolean {
+        return !(baseCurrency.valueOrNull != null && baseCurrency.value.isSameCurrency(newBase))
+    }
+
+    private fun mapToBaseElement(element: CurrencyEntity): CurrencyEntity {
+        return element.copy(value = CurrencyEntity.DEFAULT_CURRENCY_VALUE, isBase = true)
+    }
+
+    private fun getUpdatedCurrencyList(newBase: CurrencyEntity, allCurrency: List<CurrencyEntity>): Pair<List<CurrencyEntity>, Boolean> {
+        val result = mutableListOf<CurrencyEntity>()
+
+        result.add(newBase)
+
+        allCurrency
             .sortedBy { it.name }
+            .forEach {
+                if (!it.isSameCurrency(newBase)) {
+                    result.add(it.copy(isBase = false))
+                }
+            }
+
+        return result to true
     }
 }
