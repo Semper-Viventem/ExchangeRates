@@ -56,4 +56,23 @@ class ExchangeRatesMapperTest {
 
         Assert.assertEquals(expectedResult, actualResult)
     }
+
+    @Test
+    fun testMappingCurrencyResponse_ratesIsEmpty() {
+        val response = ExchangeRatesResponse(
+            base = BASE_CURRENCY,
+            date = DATE,
+            ratesResponse = AllRatesResponse(
+                rates = listOf()
+            )
+        )
+
+        val expectedResult = listOf(
+            CurrencyEntity(name = BASE_CURRENCY, isBase = true)
+        )
+
+        val actualResult = response.mapToCurrenciesList(null)
+
+        Assert.assertEquals(expectedResult, actualResult)
+    }
 }
