@@ -17,6 +17,8 @@ class MainPm(
     }
 
     val rateAndAnimateTopItem = State(emptyList<CurrencyEntity>() to false)
+    val noInternetConnectionVisible = State(false)
+
     val currencySelected = Action<CurrencyEntity>()
     val baseCurrencyInput = Action<String>()
     val changeScrollState = Action<Boolean>()
@@ -37,8 +39,14 @@ class MainPm(
                     }
                     .map { it to false }
             }
-            .doOnNext(rateAndAnimateTopItem.consumer)
-            .doOnError { error -> Timber.e(error) }
+            .doOnNext {
+                rateAndAnimateTopItem.consumer.accept(it)
+                noInternetConnectionVisible.consumer.accept(false)
+            }
+            .doOnError { error ->
+                Timber.e(error)
+                noInternetConnectionVisible.consumer.accept(true)
+            }
             .retry()
             .subscribe()
             .untilDestroy()
@@ -76,7 +84,10 @@ class MainPm(
         return element.copy(value = CurrencyEntity.DEFAULT_CURRENCY_VALUE, isBase = true)
     }
 
-    private fun getUpdatedCurrencyList(newBase: CurrencyEntity, allCurrency: List<CurrencyEntity>): Pair<List<CurrencyEntity>, Boolean> {
+    private fun getUpdatedCurrencyList(
+        newBase: CurrencyEntity,
+        allCurrency: List<CurrencyEntity>
+    ): Pair<List<CurrencyEntity>, Boolean> {
         val result = mutableListOf<CurrencyEntity>()
 
         result.add(newBase)
