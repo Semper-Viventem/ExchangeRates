@@ -28,10 +28,9 @@ class MainActivityTest : KoinTest {
     @get:Rule
     val activityRule = ActivityTestRule(MainActivity::class.java, false, false)
 
-    class FakeApi : Api {
+    private class FakeApi : Api {
         override fun latest(base: String?): Single<ExchangeRatesResponse> {
-            val networkErrorResponse = Single.error<ExchangeRatesResponse>(UnknownHostException())
-            return networkErrorResponse
+            return Single.error(UnknownHostException())
         }
 
     }
@@ -41,18 +40,17 @@ class MainActivityTest : KoinTest {
         loadKoinModules(module {
             single(override = true) { FakeApi() } bind Api::class
         })
+        activityRule.launchActivity(null)
     }
 
     @Test
     fun testDataInLoading() {
-        activityRule.launchActivity(null)
         onView(withId(R.id.progress))
             .check(matches(isDisplayed()))
     }
 
     @Test
     fun testErrorMessageIfNoInternet() {
-        activityRule.launchActivity(null)
         Thread.sleep(1000L)
         onView(withId(com.google.android.material.R.id.snackbar_text))
             .check(matches(isDisplayed()))
