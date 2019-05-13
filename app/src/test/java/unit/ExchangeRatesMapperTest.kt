@@ -1,3 +1,5 @@
+package unit
+
 import org.junit.Assert
 import org.junit.Test
 import ru.semper_viventem.exchangerates.data.mapToCurrenciesList
@@ -6,7 +8,7 @@ import ru.semper_viventem.exchangerates.data.network.response.ExchangeRatesRespo
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
 
 
-class ExchangeRatesMapper_Test {
+class ExchangeRatesMapperTest {
 
     companion object {
         private const val BASE_CURRENCY = "EUR"

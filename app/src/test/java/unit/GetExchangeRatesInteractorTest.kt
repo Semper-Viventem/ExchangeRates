@@ -1,13 +1,16 @@
+package unit
+
 import com.nhaarman.mockito_kotlin.any
 import io.reactivex.Single
 import org.junit.Test
 import org.mockito.Mockito
+import org.mockito.Mockito.mock
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
 import ru.semper_viventem.exchangerates.domain.GetExchangeRatesInteractor
 import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDataGateway
 import ru.semper_viventem.exchangerates.domain.gateway.ExchangeRatesGateway
 
-class GetExchangeRatesInteractor_Test {
+class GetExchangeRatesInteractorTest {
 
     companion object {
         private const val BASE_CURRENCY_NAME = "EUR"
@@ -15,8 +18,8 @@ class GetExchangeRatesInteractor_Test {
         private const val CURRENCY_FULL_NAME_MOCK = "US Dollar"
     }
 
-    private val currencyDataGateway = Mockito.mock(CurrencyDataGateway::class.java)
-    private val exchangeRatesGateway = Mockito.mock(ExchangeRatesGateway::class.java)
+    private val currencyDataGateway = mock(CurrencyDataGateway::class.java)
+    private val exchangeRatesGateway = mock(ExchangeRatesGateway::class.java)
 
     private val getExchangeRatesInteractor = GetExchangeRatesInteractor(exchangeRatesGateway, currencyDataGateway)
 
