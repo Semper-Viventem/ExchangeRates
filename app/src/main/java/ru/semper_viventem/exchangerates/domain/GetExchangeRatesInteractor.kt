@@ -1,8 +1,8 @@
 package ru.semper_viventem.exchangerates.domain
 
 import io.reactivex.Single
-import ru.semper_viventem.exchangerates.data.gateway.CurrencyDataGateway
-import ru.semper_viventem.exchangerates.data.gateway.ExchangeRatesGateway
+import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDataGateway
+import ru.semper_viventem.exchangerates.domain.gateway.ExchangeRatesGateway
 
 class GetExchangeRatesInteractor(
     private val exchangeRatesGateway: ExchangeRatesGateway,
