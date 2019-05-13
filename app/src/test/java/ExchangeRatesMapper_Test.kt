@@ -6,7 +6,7 @@ import ru.semper_viventem.exchangerates.data.network.response.ExchangeRatesRespo
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
 
 
-class ExchangeRatesMapperTest {
+class ExchangeRatesMapper_Test {
 
     companion object {
         private const val BASE_CURRENCY = "EUR"
