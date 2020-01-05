@@ -49,7 +49,6 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/normal_gap"
         android:layout_marginEnd="@dimen/normal_gap"
-        android:background="@null"
         android:hint="@string/currency_rate_hint"
         android:inputType="numberDecimal"
         android:maxWidth="200dp"
