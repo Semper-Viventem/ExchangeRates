@@ -4,4 +4,5 @@
 
     <string name="currency_format">%.2f</string>
     <string name="error_no_internet_connection">No internet connection</string>
+    <string name="rates_title">Rates</string>
 </resources>
