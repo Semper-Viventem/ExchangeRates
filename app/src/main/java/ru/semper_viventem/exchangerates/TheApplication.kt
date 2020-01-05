@@ -7,11 +7,17 @@ import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import ru.semper_viventem.exchangerates.data.gateway.GatewayModule
 import ru.semper_viventem.exchangerates.data.network.NetworkModule
-import ru.semper_viventem.exchangerates.domain.InteractorModule
+import ru.semper_viventem.exchangerates.domain.CurrencyEntity
+import ru.semper_viventem.exchangerates.domain.interactor.InteractorModule
 import ru.semper_viventem.exchangerates.ui.UIModule
 import timber.log.Timber
 
 class TheApplication : Application() {
+
+    companion object {
+        private const val DEFAULT_CURRENCY_FACTOR = 1.0
+        private val DEFAULT_BASE_CURRENCY = CurrencyEntity("EUR")
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -28,7 +34,7 @@ class TheApplication : Application() {
             modules(
                 UIModule.module,
                 NetworkModule.module,
-                GatewayModule.module,
+                GatewayModule.module(DEFAULT_BASE_CURRENCY, DEFAULT_CURRENCY_FACTOR),
                 InteractorModule.module
             )
         }

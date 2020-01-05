@@ -6,9 +6,9 @@ import org.junit.Test
 import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
-import ru.semper_viventem.exchangerates.domain.GetExchangeRatesInteractor
-import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDataGateway
+import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDetailsGateway
 import ru.semper_viventem.exchangerates.domain.gateway.ExchangeRatesGateway
+import ru.semper_viventem.exchangerates.domain.interactor.GetExchangeRatesInteractor
 
 class GetExchangeRatesInteractorTest {
 
@@ -18,7 +18,7 @@ class GetExchangeRatesInteractorTest {
         private const val CURRENCY_FULL_NAME_MOCK = "US Dollar"
     }
 
-    private val currencyDataGateway = mock(CurrencyDataGateway::class.java)
+    private val currencyDataGateway = mock(CurrencyDetailsGateway::class.java)
     private val exchangeRatesGateway = mock(ExchangeRatesGateway::class.java)
 
     private val getExchangeRatesInteractor = GetExchangeRatesInteractor(exchangeRatesGateway, currencyDataGateway)
