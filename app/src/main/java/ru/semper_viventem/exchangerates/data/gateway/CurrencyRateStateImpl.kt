@@ -9,7 +9,7 @@ import ru.semper_viventem.exchangerates.domain.gateway.CurrencyRateStateGateway
 
 class CurrencyRateStateImpl(
     defaultCurrencyEntity: CurrencyEntity,
-    defaultFactor: Double
+    private val defaultFactor: Double
 ) : CurrencyRateStateGateway {
 
     private val baseCurrency = BehaviorRelay.createDefault(defaultCurrencyEntity)
@@ -17,7 +17,10 @@ class CurrencyRateStateImpl(
     private val rateState = BehaviorRelay.createDefault<CurrencyRateState>(CurrencyRateState.NoData)
 
     override fun setBaseCurrency(baseCurrency: CurrencyEntity): Completable {
-        return Completable.fromAction { this.baseCurrency.accept(baseCurrency) }
+        return Completable.fromAction {
+            this.baseCurrency.accept(baseCurrency.copy(value = defaultFactor))
+            this.factor.accept(defaultFactor)
+        }
     }
 
     override fun getBaseCurrency(): Observable<CurrencyEntity> {
