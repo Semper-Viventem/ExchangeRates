@@ -2,7 +2,6 @@
     <string name="app_name">ExchangeRates</string>
     <string name="currency_rate_hint">0.0</string>
 
-    <string name="currency_format">%.2f</string>
     <string name="rates_title">Rates</string>
 
     <string name="error_no_internet_connection">No internet connection</string>

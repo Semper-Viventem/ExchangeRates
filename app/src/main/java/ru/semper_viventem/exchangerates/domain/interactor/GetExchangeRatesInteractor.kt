@@ -46,7 +46,7 @@ class GetExchangeRatesInteractor(
                         baseCurrency.fillValues()
                     )
                 }
-                .onErrorReturn { mapCurrencyError(it, lastData) }
+                .onErrorReturn { mapCurrencyError(it, lastData, factor) }
                 .flatMap {
                     currencyRateStateGateway.setCurrencyRateState(it)
                         .andThen(Observable.just(it))
@@ -75,16 +75,24 @@ class GetExchangeRatesInteractor(
 
     private fun mapCurrencyError(
         exception: Throwable,
-        lastData: CurrencyRateState
+        lastState: CurrencyRateState,
+        factor: Double
     ): CurrencyRateState {
-        return when (lastData) {
+        return when (lastState) {
             is CurrencyRateState.NoData -> CurrencyRateState.LoadingError(exception)
             is CurrencyRateState.LoadingError -> CurrencyRateState.LoadingError(exception)
             is CurrencyRateState.CurrencyData -> CurrencyRateState.NotActualCurrencyData(
                 exception,
-                lastData
+                lastState.copy(
+                    rates = lastState.rates.map { it.fillValues(factor) }
+                )
             )
-            is CurrencyRateState.NotActualCurrencyData -> lastData.copy(error = exception)
+            is CurrencyRateState.NotActualCurrencyData -> lastState.copy(
+                error = exception,
+                lastData = lastState.lastData.copy(
+                    rates = lastState.lastData.rates.map { it.fillValues(factor) }
+                )
+            )
         }
     }
 
