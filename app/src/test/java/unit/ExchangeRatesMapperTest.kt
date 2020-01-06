@@ -14,7 +14,6 @@ class ExchangeRatesMapperTest {
         private const val BASE_CURRENCY = "EUR"
         private const val DATE = "04.24.2017"
         private const val RATE_NAME = "USD"
-        private const val RATE_VALUE = 1.0
     }
 
     @Test
@@ -24,17 +23,17 @@ class ExchangeRatesMapperTest {
             date = DATE,
             ratesResponse = AllRatesResponse(
                 rates = listOf(
-                    RATE_NAME to RATE_VALUE,
-                    RATE_NAME to RATE_VALUE,
-                    RATE_NAME to RATE_VALUE
+                    RATE_NAME to 1.0,
+                    RATE_NAME to 2.0,
+                    RATE_NAME to 3.0
                 )
             )
         )
 
         val expectedResult = listOf(
-            CurrencyEntity(name = RATE_NAME, value = RATE_VALUE),
-            CurrencyEntity(name = RATE_NAME, value = RATE_VALUE),
-            CurrencyEntity(name = RATE_NAME, value = RATE_VALUE)
+            CurrencyEntity(name = RATE_NAME, value = 1.0),
+            CurrencyEntity(name = RATE_NAME, value = 2.0),
+            CurrencyEntity(name = RATE_NAME, value = 3.0)
         )
 
         val actualResult = response.toCurrenciesList()
