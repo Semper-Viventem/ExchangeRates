@@ -12,6 +12,9 @@ import ru.semper_viventem.exchangerates.domain.CurrencyEntity
 import ru.semper_viventem.exchangerates.extensions.inflate
 import ru.semper_viventem.exchangerates.extensions.load
 import ru.semper_viventem.exchangerates.extensions.showKeyboard
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.*
 
 class CurrenciesAdapter(
     private val currencySelected: (currency: CurrencyEntity) -> Unit,
@@ -60,6 +63,7 @@ class CurrenciesAdapter(
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         private lateinit var item: CurrencyEntity
+        private val decimalFormat = DecimalFormat("0.0#", DecimalFormatSymbols(Locale.ENGLISH))
 
         private val isFirstElement get() = adapterPosition == 0
         private val changedListener = object : TextWatcher {
@@ -93,7 +97,7 @@ class CurrenciesAdapter(
             with(itemView) {
                 name.text = item.name
                 fullName.text = item.fullName
-                valueEditText.setText(context.getString(R.string.currency_format, item.multipleValue))
+                valueEditText.setText(decimalFormat.format(item.multipleValue))
                 currencyImage.load(item.image, true, R.drawable.currency_placeholder)
                 if (needToShowKeyboard && isFirstElement) {
                     valueEditText.showKeyboard()
