@@ -17,63 +17,44 @@ class ExchangeRatesMapperTest {
         private const val RATE_VALUE = 1.0
     }
 
-    private val response = ExchangeRatesResponse(
-        base = BASE_CURRENCY,
-        date = DATE,
-        ratesResponse = AllRatesResponse(
-            rates = listOf(
-                RATE_NAME to RATE_VALUE,
-                RATE_NAME to RATE_VALUE,
-                RATE_NAME to RATE_VALUE
-            )
-        )
-    )
-
     @Test
-    fun testMappingCurrencyResponse_baseIsNotNull() {
-        val baseCurrency = CurrencyEntity("RUB", isBase = true)
-
-        val expectedResult = listOf(
-            baseCurrency,
-            CurrencyEntity(name = RATE_NAME),
-            CurrencyEntity(name = RATE_NAME),
-            CurrencyEntity(name = RATE_NAME)
-        )
-
-        val actualResult = response.toCurrenciesList(baseCurrency)
-
-        Assert.assertEquals(expectedResult, actualResult)
-    }
-
-    @Test
-    fun testMappingCurrencyResponse_baseIsNull() {
-        val expectedResult = listOf(
-            CurrencyEntity(name = BASE_CURRENCY, isBase = true),
-            CurrencyEntity(name = RATE_NAME),
-            CurrencyEntity(name = RATE_NAME),
-            CurrencyEntity(name = RATE_NAME)
-        )
-
-        val actualResult = response.toCurrenciesList(null)
-
-        Assert.assertEquals(expectedResult, actualResult)
-    }
-
-    @Test
-    fun testMappingCurrencyResponse_ratesIsEmpty() {
+    fun `test map if data is not empty`() {
         val response = ExchangeRatesResponse(
             base = BASE_CURRENCY,
             date = DATE,
             ratesResponse = AllRatesResponse(
-                rates = listOf()
+                rates = listOf(
+                    RATE_NAME to RATE_VALUE,
+                    RATE_NAME to RATE_VALUE,
+                    RATE_NAME to RATE_VALUE
+                )
             )
         )
 
         val expectedResult = listOf(
-            CurrencyEntity(name = BASE_CURRENCY, isBase = true)
+            CurrencyEntity(name = RATE_NAME, value = RATE_VALUE),
+            CurrencyEntity(name = RATE_NAME, value = RATE_VALUE),
+            CurrencyEntity(name = RATE_NAME, value = RATE_VALUE)
         )
 
-        val actualResult = response.toCurrenciesList(null)
+        val actualResult = response.toCurrenciesList()
+
+        Assert.assertEquals(expectedResult, actualResult)
+    }
+
+    @Test
+    fun `test map if data is empty`() {
+        val response = ExchangeRatesResponse(
+            base = BASE_CURRENCY,
+            date = DATE,
+            ratesResponse = AllRatesResponse(
+                rates = emptyList()
+            )
+        )
+
+        val expectedResult = emptyList<CurrencyEntity>()
+
+        val actualResult = response.toCurrenciesList()
 
         Assert.assertEquals(expectedResult, actualResult)
     }
