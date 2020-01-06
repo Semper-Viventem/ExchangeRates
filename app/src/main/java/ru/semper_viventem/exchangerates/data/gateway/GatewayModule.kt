@@ -4,6 +4,7 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
 import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDetailsGateway
+import ru.semper_viventem.exchangerates.domain.gateway.CurrencyRateStateGateway
 import ru.semper_viventem.exchangerates.domain.gateway.ExchangeRatesGateway
 
 object GatewayModule {
@@ -14,6 +15,6 @@ object GatewayModule {
     ) = module {
         single { ExchangeRatesGatewayImpl(get()) } bind ExchangeRatesGateway::class
         single { CurrencyDetailsGatewayImpl(get()) } bind CurrencyDetailsGateway::class
-        single { CurrencyRateStateImpl(defaultBaseCurrency, defaultFactor) }
+        single { CurrencyRateStateImpl(defaultBaseCurrency, defaultFactor) } bind CurrencyRateStateGateway::class
     }
 }
