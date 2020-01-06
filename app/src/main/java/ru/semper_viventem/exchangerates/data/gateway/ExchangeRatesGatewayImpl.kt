@@ -14,6 +14,6 @@ class ExchangeRatesGatewayImpl(
     override fun getRatesByBaseCurrency(baseCurrency: CurrencyEntity?): Single<List<CurrencyEntity>> {
         return api.latest(baseCurrency?.name)
             .subscribeOn(Schedulers.io())
-            .map { it.toCurrenciesList(baseCurrency) }
+            .map { it.toCurrenciesList() }
     }
 }

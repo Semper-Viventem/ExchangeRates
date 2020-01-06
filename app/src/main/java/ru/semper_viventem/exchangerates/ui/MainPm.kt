@@ -23,6 +23,7 @@ class MainPm(
 
         getExchangeRatesInteractor.execute()
             .doOnNext(viewState.consumer::accept)
+            .retry()
             .subscribe()
             .untilDestroy()
 

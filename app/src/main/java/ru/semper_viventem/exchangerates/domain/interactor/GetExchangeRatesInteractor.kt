@@ -16,7 +16,8 @@ class GetExchangeRatesInteractor(
     private val currencyRateStateGateway: CurrencyRateStateGateway
 ) {
 
-    private val updateTimer = Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
+    private val updateTimer =
+        Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
 
     fun execute(): Observable<CurrencyRateState> {
 
@@ -31,8 +32,19 @@ class GetExchangeRatesInteractor(
         }.flatMap { (baseCurrency, factor, lastData) ->
             exchangeRatesGateway.getRatesByBaseCurrency(baseCurrency)
                 .toObservable()
+                .run {
+                    when (lastData) {
+                        is CurrencyRateState.CurrencyData -> this.defaultIfEmpty(lastData.rates)
+                        is CurrencyRateState.NotActualCurrencyData -> this.defaultIfEmpty(lastData.lastData.rates)
+                        else -> this
+                    }
+                }
                 .map { mapCurrency(it, baseCurrency, factor) }
                 .onErrorReturn { mapCurrencyError(it, lastData) }
+                .flatMap {
+                    currencyRateStateGateway.setCurrencyRateState(it)
+                        .andThen(Observable.just(it))
+                }
         }
 
     }
@@ -61,11 +73,17 @@ class GetExchangeRatesInteractor(
         return data
     }
 
-    private fun mapCurrencyError(exception: Throwable, lastData: CurrencyRateState): CurrencyRateState {
+    private fun mapCurrencyError(
+        exception: Throwable,
+        lastData: CurrencyRateState
+    ): CurrencyRateState {
         return when (lastData) {
             is CurrencyRateState.NoData -> CurrencyRateState.LoadingError(exception)
             is CurrencyRateState.LoadingError -> CurrencyRateState.LoadingError(exception)
-            is CurrencyRateState.CurrencyData -> CurrencyRateState.NotActualCurrencyData(exception, lastData)
+            is CurrencyRateState.CurrencyData -> CurrencyRateState.NotActualCurrencyData(
+                exception,
+                lastData
+            )
             is CurrencyRateState.NotActualCurrencyData -> lastData.copy(error = exception)
         }
     }

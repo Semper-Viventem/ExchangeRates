@@ -18,7 +18,7 @@ class CurrenciesAdapter(
     private val baseValueChangeListener: (text: String) -> Unit
 ) : RecyclerView.Adapter<CurrenciesAdapter.ViewHolder>() {
 
-    private var items: List<CurrencyEntity> = listOf()
+    var items: List<CurrencyEntity> = listOf()
     private var needToShowKeyboard: Boolean = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
@@ -60,6 +60,8 @@ class CurrenciesAdapter(
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         private lateinit var item: CurrencyEntity
+
+        private val isFirstElement get() = adapterPosition == 0
         private val changedListener = object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 // do nothing
@@ -70,7 +72,7 @@ class CurrenciesAdapter(
             }
 
             override fun onTextChanged(text: CharSequence, start: Int, before: Int, count: Int) {
-                if (item.isBase) {
+                if (isFirstElement) {
                     baseValueChangeListener.invoke(text.toString())
                 }
             }
@@ -93,11 +95,11 @@ class CurrenciesAdapter(
                 fullName.text = item.fullName
                 valueEditText.setText(context.getString(R.string.currency_format, item.value))
                 currencyImage.load(item.image, true, R.drawable.currency_placeholder)
-                if (needToShowKeyboard && item.isBase) {
+                if (needToShowKeyboard && isFirstElement) {
                     valueEditText.showKeyboard()
                     needToShowKeyboard = false
                 }
-                if (item.isBase) {
+                if (isFirstElement) {
                     valueEditText.addTextChangedListener(changedListener)
                 } else {
                     valueEditText.removeTextChangedListener(changedListener)
