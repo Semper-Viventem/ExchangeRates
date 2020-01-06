@@ -31,7 +31,8 @@ class MainActivity : PmSupportActivity<MainPm>() {
         },
         baseValueChangeListener = { text ->
             text passTo presentationModel.factorInput.consumer
-        })
+        }
+    )
 
     private lateinit var snackbar: Snackbar
     private var inScroll = false
@@ -114,6 +115,8 @@ class MainActivity : PmSupportActivity<MainPm>() {
     }
 
     private fun refreshRatesList(data: CurrencyRateState.CurrencyData) {
+        if (inScroll) return
+
         val items = listOf(data.baseCurrency) + data.rates
         val needToRefreshBaseCurrency =
             currenciesAdapter.items.firstOrNull()?.isSameCurrency(data.baseCurrency) != true
