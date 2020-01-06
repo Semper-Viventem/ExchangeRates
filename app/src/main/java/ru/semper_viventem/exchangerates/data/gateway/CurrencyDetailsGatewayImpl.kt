@@ -3,12 +3,12 @@ package ru.semper_viventem.exchangerates.data.gateway
 import android.content.Context
 import ru.semper_viventem.exchangerates.R
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
-import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDataGateway
+import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDetailsGateway
 import timber.log.Timber
 
-class CurrencyDataGatewayImpl(
+class CurrencyDetailsGatewayImpl(
     private val context: Context
-): CurrencyDataGateway {
+): CurrencyDetailsGateway {
 
     companion object {
         private const val FLAGS_PATCH = "flags"

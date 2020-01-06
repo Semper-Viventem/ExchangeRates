@@ -2,9 +2,9 @@ package unit
 
 import org.junit.Assert
 import org.junit.Test
-import ru.semper_viventem.exchangerates.data.mapToCurrenciesList
 import ru.semper_viventem.exchangerates.data.network.response.AllRatesResponse
 import ru.semper_viventem.exchangerates.data.network.response.ExchangeRatesResponse
+import ru.semper_viventem.exchangerates.data.toCurrenciesList
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
 
 
@@ -40,7 +40,7 @@ class ExchangeRatesMapperTest {
             CurrencyEntity(name = RATE_NAME)
         )
 
-        val actualResult = response.mapToCurrenciesList(baseCurrency)
+        val actualResult = response.toCurrenciesList(baseCurrency)
 
         Assert.assertEquals(expectedResult, actualResult)
     }
@@ -54,7 +54,7 @@ class ExchangeRatesMapperTest {
             CurrencyEntity(name = RATE_NAME)
         )
 
-        val actualResult = response.mapToCurrenciesList(null)
+        val actualResult = response.toCurrenciesList(null)
 
         Assert.assertEquals(expectedResult, actualResult)
     }
@@ -73,7 +73,7 @@ class ExchangeRatesMapperTest {
             CurrencyEntity(name = BASE_CURRENCY, isBase = true)
         )
 
-        val actualResult = response.mapToCurrenciesList(null)
+        val actualResult = response.toCurrenciesList(null)
 
         Assert.assertEquals(expectedResult, actualResult)
     }

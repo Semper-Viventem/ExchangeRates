@@ -2,7 +2,7 @@ package ru.semper_viventem.exchangerates.domain.gateway
 
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
 
-interface CurrencyDataGateway {
+interface CurrencyDetailsGateway {
 
     fun getNameForCurrency(currency: CurrencyEntity): String?
 
