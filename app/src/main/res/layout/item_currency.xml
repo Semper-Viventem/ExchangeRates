@@ -51,13 +51,13 @@
         android:layout_marginEnd="@dimen/normal_gap"
         android:hint="@string/currency_rate_hint"
         android:inputType="numberDecimal"
-        android:maxWidth="200dp"
+        android:maxWidth="150dp"
         android:textAlignment="textEnd"
         android:textSize="32sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="74.92" />
+        tools:text="74.99999999999992" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
