@@ -168,6 +168,21 @@ class GetExchangeRatesInteractorTest {
     @Test
     fun `test loading error`() {
 
+        val error = UnknownHostException("host")
+
+        val exchangeRatesGateway = getExchangeRateGatewayWithError(error)
+        val currencyDetailsGateway = getCurrencyDetailsGatewayWithDefault("name", "image")
+        val currencyRateStateGateway = CurrencyRateStateImpl(baseCurrency, defaultFactor)
+
+        val interactor = GetExchangeRatesInteractor(
+            exchangeRatesGateway,
+            currencyDetailsGateway,
+            currencyRateStateGateway
+        )
+
+        interactor.execute().test()
+            .assertValueAt(0) { it == CurrencyRateState.NoData }
+            .assertValueAt(1) { it == CurrencyRateState.LoadingError(error) }
     }
 
     private fun getExchangeRateGatewayWithDefault(items: List<CurrencyEntity>): ExchangeRatesGateway {
