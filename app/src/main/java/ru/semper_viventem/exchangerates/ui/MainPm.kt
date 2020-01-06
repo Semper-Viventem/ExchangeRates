@@ -33,7 +33,7 @@ class MainPm(
             .untilDestroy()
 
         factorInput.observable
-            .map { it.toDouble() }
+            .map { it.toDoubleOrNull() ?: 1.0 }
             .flatMapCompletable(setNewFactorInteractor::execute)
             .subscribe()
             .untilDestroy()

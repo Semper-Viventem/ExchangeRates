@@ -25,8 +25,9 @@ class GetExchangeRatesInteractor(
             updateTimer.hide(),
             currencyRateStateGateway.getBaseCurrency(),
             currencyRateStateGateway.getFactor()
-        ).flatMap { (_, baseCurrency, factor) ->
+        ).flatMapSingle { (_, baseCurrency, factor) ->
             currencyRateStateGateway.getLastCurrencyRateState()
+                .firstOrError()
                 .map { lastData -> Triple(baseCurrency, factor, lastData) }
 
         }.flatMap { (baseCurrency, factor, lastData) ->

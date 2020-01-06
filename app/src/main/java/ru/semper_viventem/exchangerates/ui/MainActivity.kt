@@ -12,6 +12,7 @@ import org.koin.android.ext.android.getKoin
 import ru.semper_viventem.exchangerates.R
 import ru.semper_viventem.exchangerates.domain.CurrencyRateState
 import ru.semper_viventem.exchangerates.extensions.hideKeyboard
+import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
@@ -64,6 +65,9 @@ class MainActivity : PmSupportActivity<MainPm>() {
     }
 
     private fun render(state: CurrencyRateState) {
+
+        Timber.d("UI State: $state")
+
         when (state) {
             is CurrencyRateState.NoData -> showNoDataState()
             is CurrencyRateState.CurrencyData -> showDataState(state)
@@ -82,10 +86,7 @@ class MainActivity : PmSupportActivity<MainPm>() {
         progress.isVisible = false
         recyclerView.isVisible = true
         hideError()
-
-        val items = listOf(state.baseCurrency) + state.rates
-        val needToRefreshBaseCurrency = currenciesAdapter.items.firstOrNull()?.isSameCurrency(state.baseCurrency) != true
-        currenciesAdapter.setData(items, needToRefreshBaseCurrency)
+        refreshRatesList(state)
     }
 
     private fun showErrorState() {
@@ -95,9 +96,12 @@ class MainActivity : PmSupportActivity<MainPm>() {
     }
 
     private fun showNotActualDataState(state: CurrencyRateState.NotActualCurrencyData) {
-        showDataState(state.lastData)
+        progress.isVisible = false
+        recyclerView.isVisible = false
+        refreshRatesList(state.lastData)
 
-        val lastUpdateSeconds = MILLISECONDS.toSeconds(Date().time - state.lastData.lastUpdateTime.time)
+        val lastUpdateSeconds =
+            MILLISECONDS.toSeconds(Date().time - state.lastData.lastUpdateTime.time)
 
         val (timeUnit, timeUnitStr) = when (lastUpdateSeconds) {
             1L -> lastUpdateSeconds to getString(R.string.second)
@@ -107,6 +111,18 @@ class MainActivity : PmSupportActivity<MainPm>() {
         }
 
         showErrorMessage(getString(R.string.error_failed_with_data, timeUnit, timeUnitStr))
+    }
+
+    private fun refreshRatesList(data: CurrencyRateState.CurrencyData) {
+        val items = listOf(data.baseCurrency) + data.rates
+        val needToRefreshBaseCurrency =
+            currenciesAdapter.items.firstOrNull()?.isSameCurrency(data.baseCurrency) != true
+
+        if (needToRefreshBaseCurrency) {
+            recyclerView.scrollToPosition(0)
+        }
+
+        currenciesAdapter.setData(items, needToRefreshBaseCurrency)
     }
 
     private fun showErrorMessage(message: String) {
