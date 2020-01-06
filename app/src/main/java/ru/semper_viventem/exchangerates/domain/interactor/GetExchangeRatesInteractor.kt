@@ -18,6 +18,7 @@ class GetExchangeRatesInteractor(
 
     private val updateTimer =
         Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
+            .startWith(0)
 
     fun execute(): Observable<CurrencyRateState> {
 
