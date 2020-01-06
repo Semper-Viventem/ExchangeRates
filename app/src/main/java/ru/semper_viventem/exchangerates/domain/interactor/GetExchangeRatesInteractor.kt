@@ -40,11 +40,23 @@ class GetExchangeRatesInteractor(
                         else -> this
                     }
                 }
-                .map { mapCurrency(it, baseCurrency, factor) }
+                .map {
+                    mapCurrency(
+                        it.map { it.fillValues(factor) },
+                        baseCurrency.fillValues()
+                    )
+                }
                 .onErrorReturn { mapCurrencyError(it, lastData) }
                 .flatMap {
                     currencyRateStateGateway.setCurrencyRateState(it)
                         .andThen(Observable.just(it))
+                }
+                .run {
+                    if (lastData is CurrencyRateState.NoData) {
+                        this.startWith(lastData)
+                    } else {
+                        this
+                    }
                 }
         }
 
@@ -52,26 +64,13 @@ class GetExchangeRatesInteractor(
 
     private fun mapCurrency(
         currencies: List<CurrencyEntity>,
-        baseCurrency: CurrencyEntity,
-        factor: Double
+        baseCurrency: CurrencyEntity
     ): CurrencyRateState {
-
-        val updatedRates = currencies.map {
-            it.copy(
-                value = it.value * factor,
-                fullName = currencyDetailsGateway.getNameForCurrency(it).orEmpty(),
-                image = currencyDetailsGateway.getFlagForCurrency(it)
-            )
-        }
-
-        val data = CurrencyRateState.CurrencyData(
+        return CurrencyRateState.CurrencyData(
             baseCurrency = baseCurrency,
-            rates = updatedRates,
-            factor = factor,
+            rates = currencies,
             lastUpdateTime = Date()
         )
-
-        return data
     }
 
     private fun mapCurrencyError(
@@ -87,6 +86,15 @@ class GetExchangeRatesInteractor(
             )
             is CurrencyRateState.NotActualCurrencyData -> lastData.copy(error = exception)
         }
+    }
+
+    private fun CurrencyEntity.fillValues(factor: Double = 1.0): CurrencyEntity {
+        return copy(
+            value = value,
+            multipleValue = value * factor,
+            fullName = currencyDetailsGateway.getNameForCurrency(this).orEmpty(),
+            image = currencyDetailsGateway.getFlagForCurrency(this)
+        )
     }
 
     companion object {

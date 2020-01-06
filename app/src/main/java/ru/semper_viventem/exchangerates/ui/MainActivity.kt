@@ -90,14 +90,14 @@ class MainActivity : PmSupportActivity<MainPm>() {
     }
 
     private fun showErrorState() {
-        progress.isVisible = false
+        progress.isVisible = true
         recyclerView.isVisible = false
         showErrorMessage(getString(R.string.error_failed))
     }
 
     private fun showNotActualDataState(state: CurrencyRateState.NotActualCurrencyData) {
         progress.isVisible = false
-        recyclerView.isVisible = false
+        recyclerView.isVisible = true
         refreshRatesList(state.lastData)
 
         val lastUpdateSeconds =
@@ -105,7 +105,7 @@ class MainActivity : PmSupportActivity<MainPm>() {
 
         val (timeUnit, timeUnitStr) = when (lastUpdateSeconds) {
             1L -> lastUpdateSeconds to getString(R.string.second)
-            in 2L..59L -> lastUpdateSeconds to getString(R.string.second)
+            in 2L..59L -> lastUpdateSeconds to getString(R.string.seconds)
             in 60L..69L -> SECONDS.toMinutes(lastUpdateSeconds) to getString(R.string.minute)
             else -> SECONDS.toMinutes(lastUpdateSeconds) to getString(R.string.minutes)
         }

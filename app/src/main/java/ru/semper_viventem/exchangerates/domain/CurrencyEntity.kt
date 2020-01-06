@@ -4,6 +4,7 @@ data class CurrencyEntity(
     val name: String,
     val fullName: String = "",
     val value: Double = 0.0,
+    val multipleValue: Double = 0.0,
     val image: String? = null
 ) {
 

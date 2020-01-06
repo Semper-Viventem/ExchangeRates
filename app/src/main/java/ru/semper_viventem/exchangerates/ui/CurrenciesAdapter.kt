@@ -93,7 +93,7 @@ class CurrenciesAdapter(
             with(itemView) {
                 name.text = item.name
                 fullName.text = item.fullName
-                valueEditText.setText(context.getString(R.string.currency_format, item.value))
+                valueEditText.setText(context.getString(R.string.currency_format, item.multipleValue))
                 currencyImage.load(item.image, true, R.drawable.currency_placeholder)
                 if (needToShowKeyboard && isFirstElement) {
                     valueEditText.showKeyboard()

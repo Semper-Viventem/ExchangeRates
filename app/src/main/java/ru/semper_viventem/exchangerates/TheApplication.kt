@@ -16,7 +16,10 @@ class TheApplication : Application() {
 
     companion object {
         private const val DEFAULT_CURRENCY_FACTOR = 1.0
-        private val DEFAULT_BASE_CURRENCY = CurrencyEntity("EUR")
+        private val DEFAULT_BASE_CURRENCY = CurrencyEntity(
+            name = "EUR",
+            value = DEFAULT_CURRENCY_FACTOR
+        )
     }
 
     override fun onCreate() {

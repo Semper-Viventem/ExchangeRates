@@ -13,7 +13,6 @@ sealed class CurrencyRateState {
     data class CurrencyData(
         val baseCurrency: CurrencyEntity,
         val rates: List<CurrencyEntity>,
-        val factor: Double,
         val lastUpdateTime: Date
     ) : CurrencyRateState()
 
