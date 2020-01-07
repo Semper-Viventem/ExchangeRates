@@ -10,7 +10,7 @@ import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDetailsGateway
 import ru.semper_viventem.exchangerates.domain.gateway.CurrencyRateStateGateway
 import ru.semper_viventem.exchangerates.domain.gateway.ExchangeRatesGateway
 import java.util.*
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
 class GetExchangeRatesInteractor(
     private val exchangeRatesGateway: ExchangeRatesGateway,
@@ -18,17 +18,13 @@ class GetExchangeRatesInteractor(
     private val currencyRateStateGateway: CurrencyRateStateGateway
 ) {
 
-    private val shouldBeNextTick = BehaviorRelay.createDefault(Unit)
-    private val tickGenerator =
-        Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
-
     fun execute(): Observable<CurrencyRateState> {
 
+        val shouldBeNextTick = BehaviorRelay.createDefault(Unit)
+        val tickGenerator = Observable.interval(UPDATE_INTERVAL_MILLIS, MILLISECONDS)
+
         val multipleTicker = zip(
-            shouldBeNextTick.hide().delay(
-                UPDATE_INTERVAL_MILLISECONDS,
-                TimeUnit.MILLISECONDS
-            ).startWith(Unit),
+            shouldBeNextTick.hide().delay(UPDATE_INTERVAL_MILLIS, MILLISECONDS).startWith(Unit),
             tickGenerator.startWith(0)
         ).map { Unit }
 
@@ -46,12 +42,7 @@ class GetExchangeRatesInteractor(
             .switchMap { (baseCurrency, factor, lastData) ->
                 exchangeRatesGateway.getRatesByBaseCurrency(baseCurrency)
                     .toObservable()
-                    .map {
-                        mapCurrency(
-                            it.sortAndFill(factor),
-                            baseCurrency.fillValues(factor)
-                        )
-                    }
+                    .map { buildCurrencyData(it, baseCurrency, factor) }
                     .onErrorReturn { mapCurrencyError(it, lastData, factor) }
                     .flatMap {
                         shouldBeNextTick.accept(Unit)
@@ -70,38 +61,21 @@ class GetExchangeRatesInteractor(
         return when (lastState) {
             is CurrencyRateState.NoData -> this.startWith(lastState)
             is CurrencyRateState.NotActualCurrencyData -> {
-                this.startWith(
-                    lastState.copy(
-                        lastData = lastState.lastData.copy(
-                            baseCurrency = lastState.lastData.baseCurrency.fillValues(factor),
-                            rates = lastState.lastData.rates.sortAndFill(
-                                factor
-                            )
-                        )
-                    )
-                )
+                this.startWith(lastState.copy(lastData = lastState.lastData.actualize(factor)))
             }
-            is CurrencyRateState.CurrencyData -> {
-                this.startWith(
-                    lastState.copy(
-                        baseCurrency = lastState.baseCurrency.fillValues(factor),
-                        rates = lastState.rates.sortAndFill(
-                            factor
-                        )
-                    )
-                )
-            }
+            is CurrencyRateState.CurrencyData -> this.startWith(lastState.actualize(factor))
             else -> this
         }
     }
 
-    private fun mapCurrency(
+    private fun buildCurrencyData(
         currencies: List<CurrencyEntity>,
-        baseCurrency: CurrencyEntity
+        baseCurrency: CurrencyEntity,
+        factor: Double
     ): CurrencyRateState {
         return CurrencyRateState.CurrencyData(
-            baseCurrency = baseCurrency,
-            rates = currencies,
+            baseCurrency = baseCurrency.fillValues(factor),
+            rates = currencies.sortAndFill(factor),
             lastUpdateTime = Date()
         )
     }
@@ -115,20 +89,21 @@ class GetExchangeRatesInteractor(
             is CurrencyRateState.NoData -> CurrencyRateState.LoadingError(exception)
             is CurrencyRateState.LoadingError -> CurrencyRateState.LoadingError(exception)
             is CurrencyRateState.CurrencyData -> CurrencyRateState.NotActualCurrencyData(
-                exception,
-                lastState.copy(
-                    baseCurrency = lastState.baseCurrency.fillValues(factor),
-                    rates = lastState.rates.sortAndFill(factor)
-                )
+                error = exception,
+                lastData = lastState.actualize(factor)
             )
             is CurrencyRateState.NotActualCurrencyData -> lastState.copy(
                 error = exception,
-                lastData = lastState.lastData.copy(
-                    baseCurrency = lastState.lastData.baseCurrency.fillValues(factor),
-                    rates = lastState.lastData.rates.sortAndFill(factor)
-                )
+                lastData = lastState.lastData.actualize(factor)
             )
         }
+    }
+
+    private fun CurrencyRateState.CurrencyData.actualize(factor: Double): CurrencyRateState.CurrencyData {
+        return copy(
+            baseCurrency = baseCurrency.fillValues(factor),
+            rates = rates.sortAndFill(factor)
+        )
     }
 
     private fun List<CurrencyEntity>.sortAndFill(factor: Double = 1.0): List<CurrencyEntity> {
@@ -145,7 +120,7 @@ class GetExchangeRatesInteractor(
     }
 
     companion object {
-        private const val UPDATE_INTERVAL_MILLISECONDS = 1000L
+        private const val UPDATE_INTERVAL_MILLIS = 1000L
     }
 
 }
