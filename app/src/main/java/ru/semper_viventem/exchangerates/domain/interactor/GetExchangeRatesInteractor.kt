@@ -21,7 +21,7 @@ class GetExchangeRatesInteractor(
 
     fun execute(): Observable<CurrencyRateState> {
         return combineLatest(
-            ticker.hide().delay(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS).defaultIfEmpty(Unit),
+            ticker.hide().delay(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS).startWith(Unit),
             currencyRateStateGateway.getBaseCurrency(),
             currencyRateStateGateway.getFactor()
         )
