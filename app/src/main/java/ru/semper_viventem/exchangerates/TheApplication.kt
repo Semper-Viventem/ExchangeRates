@@ -38,7 +38,7 @@ class TheApplication : Application() {
                 UIModule.module,
                 NetworkModule.module,
                 GatewayModule.module(DEFAULT_BASE_CURRENCY, DEFAULT_CURRENCY_FACTOR),
-                InteractorModule.module
+                InteractorModule.module(DEFAULT_CURRENCY_FACTOR)
             )
         }
     }
