@@ -19,12 +19,16 @@ class GetExchangeRatesInteractor(
 ) {
 
     private val shouldBeNextTick = BehaviorRelay.createDefault(Unit)
-    private val tickGenerator = Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
+    private val tickGenerator =
+        Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
 
     fun execute(): Observable<CurrencyRateState> {
 
         val multipleTicker = zip(
-            shouldBeNextTick.hide().delay(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS).startWith(Unit),
+            shouldBeNextTick.hide().delay(
+                UPDATE_INTERVAL_MILLISECONDS,
+                TimeUnit.MILLISECONDS
+            ).startWith(Unit),
             tickGenerator.startWith(0)
         ).map { Unit }
 
@@ -45,7 +49,7 @@ class GetExchangeRatesInteractor(
                     .map {
                         mapCurrency(
                             it.sortAndFill(factor),
-                            baseCurrency.fillValues()
+                            baseCurrency.fillValues(factor)
                         )
                     }
                     .onErrorReturn { mapCurrencyError(it, lastData, factor) }
@@ -60,16 +64,17 @@ class GetExchangeRatesInteractor(
     }
 
     private fun Observable<CurrencyRateState>.withDefault(
-        lastData: CurrencyRateState,
+        lastState: CurrencyRateState,
         factor: Double
     ): Observable<CurrencyRateState> {
-        return when (lastData) {
-            is CurrencyRateState.NoData -> this.startWith(lastData)
+        return when (lastState) {
+            is CurrencyRateState.NoData -> this.startWith(lastState)
             is CurrencyRateState.NotActualCurrencyData -> {
                 this.startWith(
-                    lastData.copy(
-                        lastData = lastData.lastData.copy(
-                            rates = lastData.lastData.rates.sortAndFill(
+                    lastState.copy(
+                        lastData = lastState.lastData.copy(
+                            baseCurrency = lastState.lastData.baseCurrency.fillValues(factor),
+                            rates = lastState.lastData.rates.sortAndFill(
                                 factor
                             )
                         )
@@ -78,8 +83,9 @@ class GetExchangeRatesInteractor(
             }
             is CurrencyRateState.CurrencyData -> {
                 this.startWith(
-                    lastData.copy(
-                        rates = lastData.rates.sortAndFill(
+                    lastState.copy(
+                        baseCurrency = lastState.baseCurrency.fillValues(factor),
+                        rates = lastState.rates.sortAndFill(
                             factor
                         )
                     )
@@ -111,12 +117,14 @@ class GetExchangeRatesInteractor(
             is CurrencyRateState.CurrencyData -> CurrencyRateState.NotActualCurrencyData(
                 exception,
                 lastState.copy(
+                    baseCurrency = lastState.baseCurrency.fillValues(factor),
                     rates = lastState.rates.sortAndFill(factor)
                 )
             )
             is CurrencyRateState.NotActualCurrencyData -> lastState.copy(
                 error = exception,
                 lastData = lastState.lastData.copy(
+                    baseCurrency = lastState.lastData.baseCurrency.fillValues(factor),
                     rates = lastState.lastData.rates.sortAndFill(factor)
                 )
             )
