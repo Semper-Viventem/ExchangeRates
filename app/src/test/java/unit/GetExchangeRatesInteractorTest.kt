@@ -131,8 +131,9 @@ class GetExchangeRatesInteractorTest {
         )
 
         interactor.execute().test()
-            .assertValueAt(0) { it is CurrencyRateState.NotActualCurrencyData }
-            .assertValueAt(0) {
+            .assertValueAt(0) { it is CurrencyRateState.CurrencyData }
+            .assertValueAt(1) { it is CurrencyRateState.NotActualCurrencyData }
+            .assertValueAt(1) {
                 val expected = CurrencyRateState.NotActualCurrencyData(
                     error = error,
                     lastData = lastState.copy(
