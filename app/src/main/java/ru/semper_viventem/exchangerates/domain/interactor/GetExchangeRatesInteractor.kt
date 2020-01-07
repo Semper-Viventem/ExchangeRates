@@ -1,5 +1,6 @@
 package ru.semper_viventem.exchangerates.domain.interactor
 
+import com.jakewharton.rxrelay2.BehaviorRelay
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.Observables.combineLatest
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
@@ -16,13 +17,11 @@ class GetExchangeRatesInteractor(
     private val currencyRateStateGateway: CurrencyRateStateGateway
 ) {
 
-    private val updateTimer =
-        Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
-            .startWith(0)
+    private val ticker = BehaviorRelay.createDefault(Unit)
 
     fun execute(): Observable<CurrencyRateState> {
         return combineLatest(
-            updateTimer.hide(),
+            ticker.hide().delay(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS),
             currencyRateStateGateway.getBaseCurrency(),
             currencyRateStateGateway.getFactor()
         )
@@ -43,37 +42,43 @@ class GetExchangeRatesInteractor(
                     }
                     .onErrorReturn { mapCurrencyError(it, lastData, factor) }
                     .flatMap {
+                        ticker.accept(Unit)
                         currencyRateStateGateway.setCurrencyRateState(it)
                             .andThen(Observable.just(it))
                     }
-                    .run {
-                        when (lastData) {
-                            is CurrencyRateState.NoData -> this.startWith(lastData)
-                            is CurrencyRateState.NotActualCurrencyData -> {
-                                this.startWith(
-                                    lastData.copy(
-                                        lastData = lastData.lastData.copy(
-                                            rates = lastData.lastData.rates.sortAndFill(
-                                                factor
-                                            )
-                                        )
-                                    )
-                                )
-                            }
-                            is CurrencyRateState.CurrencyData -> {
-                                this.startWith(
-                                    lastData.copy(
-                                        rates = lastData.rates.sortAndFill(
-                                            factor
-                                        )
-                                    )
-                                )
-                            }
-                            else -> this
-                        }
-                    }
+                    .withDefault(lastData, factor)
             }
 
+    }
+
+    private fun Observable<CurrencyRateState>.withDefault(
+        lastData: CurrencyRateState,
+        factor: Double
+    ): Observable<CurrencyRateState> {
+        return when (lastData) {
+            is CurrencyRateState.NoData -> this.startWith(lastData)
+            is CurrencyRateState.NotActualCurrencyData -> {
+                this.startWith(
+                    lastData.copy(
+                        lastData = lastData.lastData.copy(
+                            rates = lastData.lastData.rates.sortAndFill(
+                                factor
+                            )
+                        )
+                    )
+                )
+            }
+            is CurrencyRateState.CurrencyData -> {
+                this.startWith(
+                    lastData.copy(
+                        rates = lastData.rates.sortAndFill(
+                            factor
+                        )
+                    )
+                )
+            }
+            else -> this
+        }
     }
 
     private fun mapCurrency(
@@ -124,7 +129,7 @@ class GetExchangeRatesInteractor(
     }
 
     companion object {
-        private const val UPDATE_INTERVAL_MILLISECONDS = 2000L
+        private const val UPDATE_INTERVAL_MILLISECONDS = 1000L
     }
 
 }
