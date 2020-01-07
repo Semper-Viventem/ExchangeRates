@@ -18,13 +18,14 @@ class GetExchangeRatesInteractor(
     private val currencyRateStateGateway: CurrencyRateStateGateway
 ) {
 
-    private val ticker = BehaviorRelay.createDefault(Unit)
+    private val shouldBeNextTick = BehaviorRelay.createDefault(Unit)
+    private val tickGenerator = Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
 
     fun execute(): Observable<CurrencyRateState> {
 
         val multipleTicker = zip(
-            ticker.delay(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS).startWith(Unit),
-            Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS).startWith(0)
+            shouldBeNextTick.hide().delay(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS).startWith(Unit),
+            tickGenerator.startWith(0)
         ).map { Unit }
 
         return combineLatest(
@@ -49,7 +50,7 @@ class GetExchangeRatesInteractor(
                     }
                     .onErrorReturn { mapCurrencyError(it, lastData, factor) }
                     .flatMap {
-                        ticker.accept(Unit)
+                        shouldBeNextTick.accept(Unit)
                         currencyRateStateGateway.setCurrencyRateState(it)
                             .andThen(Observable.just(it))
                     }
