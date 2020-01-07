@@ -62,7 +62,7 @@ class MainActivityTest : KoinTest {
     @Test
     fun testDataInLoading() {
         activityRule.launchActivity(null)
-        Thread.sleep(5000L)
+        Thread.sleep(1000L)
         onView(withId(R.id.progress))
             .check(matches(isDisplayed()))
     }
@@ -72,7 +72,7 @@ class MainActivityTest : KoinTest {
         fakeApi.result = Single.just(defaultServerResponse)
         activityRule.launchActivity(null)
 
-        Thread.sleep(5000L)
+        Thread.sleep(1000L)
         onView(withId(R.id.recyclerView))
             .check(matches(hasChildCount(3)))
     }
@@ -82,7 +82,7 @@ class MainActivityTest : KoinTest {
         fakeApi.result = Single.error(UnknownHostException("host"))
         activityRule.launchActivity(null)
 
-        Thread.sleep(5000L)
+        Thread.sleep(1000L)
         onView(withId(com.google.android.material.R.id.snackbar_text))
             .check(matches(isDisplayed()))
             .check(matches(withText(R.string.error_failed)))
