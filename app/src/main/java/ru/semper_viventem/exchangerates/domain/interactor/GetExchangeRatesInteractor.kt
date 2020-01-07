@@ -3,6 +3,7 @@ package ru.semper_viventem.exchangerates.domain.interactor
 import com.jakewharton.rxrelay2.BehaviorRelay
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.Observables.combineLatest
+import io.reactivex.rxkotlin.Observables.zip
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
 import ru.semper_viventem.exchangerates.domain.CurrencyRateState
 import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDetailsGateway
@@ -17,11 +18,18 @@ class GetExchangeRatesInteractor(
     private val currencyRateStateGateway: CurrencyRateStateGateway
 ) {
 
-    private val ticker = BehaviorRelay.createDefault(Unit)
+    private val shouldBeNextTick = BehaviorRelay.createDefault(Unit)
+    private val tickGenerator = Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
 
     fun execute(): Observable<CurrencyRateState> {
+
+        val multipleTicker = zip(
+            shouldBeNextTick.hide().delay(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS).startWith(Unit),
+            tickGenerator.startWith(0)
+        ).map { Unit }
+
         return combineLatest(
-            ticker.hide().delay(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS).startWith(Unit),
+            multipleTicker,
             currencyRateStateGateway.getBaseCurrency(),
             currencyRateStateGateway.getFactor()
         )
@@ -42,7 +50,7 @@ class GetExchangeRatesInteractor(
                     }
                     .onErrorReturn { mapCurrencyError(it, lastData, factor) }
                     .flatMap {
-                        ticker.accept(Unit)
+                        shouldBeNextTick.accept(Unit)
                         currencyRateStateGateway.setCurrencyRateState(it)
                             .andThen(Observable.just(it))
                     }

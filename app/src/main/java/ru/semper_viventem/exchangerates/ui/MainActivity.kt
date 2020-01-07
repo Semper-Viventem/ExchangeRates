@@ -1,6 +1,7 @@
 package ru.semper_viventem.exchangerates.ui
 
 import android.os.Bundle
+import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -133,9 +134,20 @@ class MainActivity : PmSupportActivity<MainPm>() {
             setText(message)
             show()
         }
+        recyclerView.setPaddings(bottom = snackbar.view.height)
     }
 
     private fun hideError() {
         snackbar.dismiss()
+        recyclerView.setPaddings(bottom = 0)
+    }
+
+    private fun View.setPaddings(
+        start: Int = paddingStart,
+        top: Int = paddingTop,
+        end: Int = paddingEnd,
+        bottom: Int = paddingBottom
+    ) {
+        setPadding(start, top, end, bottom)
     }
 }
