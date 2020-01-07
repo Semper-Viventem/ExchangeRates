@@ -137,6 +137,10 @@ class GetExchangeRatesInteractorTest {
                 val expected = CurrencyRateState.NotActualCurrencyData(
                     error = error,
                     lastData = lastState.copy(
+                        baseCurrency = lastState.baseCurrency.copy(
+                            fullName = "name",
+                            image = "image"
+                        ),
                         rates = listOf(
                             CurrencyEntity(
                                 name = "USD",
