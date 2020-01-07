@@ -12,14 +12,14 @@
         android:id="@+id/currencyImage"
         android:layout_width="@dimen/currency_image_size"
         android:layout_height="@dimen/currency_image_size"
-        android:layout_marginBottom="@dimen/normal_gap"
         android:layout_marginStart="@dimen/normal_gap"
         android:layout_marginTop="@dimen/normal_gap"
+        android:layout_marginBottom="@dimen/normal_gap"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0"
-        tools:src="@drawable/currency_placeholder"/>
+        tools:src="@drawable/currency_placeholder" />
 
     <TextView
         android:id="@+id/name"
@@ -28,38 +28,36 @@
         android:layout_marginStart="@dimen/normal_gap"
         android:textColor="@color/black"
         android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="@id/currencyImage"
         app:layout_constraintStart_toEndOf="@id/currencyImage"
-        tools:text="USD"/>
+        app:layout_constraintTop_toTopOf="@id/currencyImage"
+        tools:text="USD" />
 
     <TextView
         android:id="@+id/fullName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/normal_gap"
         android:layout_marginStart="@dimen/normal_gap"
-        android:layout_marginTop="@dimen/small_gap"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/currencyImage"
-        tools:text="United states dollar"/>
+        app:layout_constraintBottom_toBottomOf="@id/currencyImage"
+        app:layout_constraintStart_toEndOf="@id/currencyImage"
+        app:layout_constraintTop_toBottomOf="@id/name"
+        app:layout_constraintVertical_bias="0"
+        tools:text="United states dollar" />
 
     <EditText
         android:id="@+id/valueEditText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/normal_gap"
         android:layout_marginStart="@dimen/normal_gap"
-        android:background="@null"
-        android:maxWidth="200dp"
+        android:layout_marginEnd="@dimen/normal_gap"
         android:hint="@string/currency_rate_hint"
         android:inputType="numberDecimal"
+        android:maxWidth="150dp"
         android:textAlignment="textEnd"
         android:textSize="32sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="74.92"/>
+        tools:text="74.99999999999992" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

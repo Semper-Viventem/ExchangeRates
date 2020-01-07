@@ -4,6 +4,6 @@ import org.koin.dsl.module
 
 object UIModule {
     val module = module {
-        factory { MainPm(get()) }
+        factory { MainPm(get(), get(), get()) }
     }
 }

@@ -1,148 +1,210 @@
 package unit
 
 import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doReturn
+import com.nhaarman.mockito_kotlin.mock
+import io.reactivex.Completable
+import io.reactivex.Observable
 import io.reactivex.Single
 import org.junit.Test
-import org.mockito.Mockito
-import org.mockito.Mockito.mock
+import ru.semper_viventem.exchangerates.data.gateway.CurrencyRateStateImpl
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
-import ru.semper_viventem.exchangerates.domain.GetExchangeRatesInteractor
-import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDataGateway
+import ru.semper_viventem.exchangerates.domain.CurrencyRateState
+import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDetailsGateway
+import ru.semper_viventem.exchangerates.domain.gateway.CurrencyRateStateGateway
 import ru.semper_viventem.exchangerates.domain.gateway.ExchangeRatesGateway
+import ru.semper_viventem.exchangerates.domain.interactor.GetExchangeRatesInteractor
+import java.net.UnknownHostException
+import java.util.*
 
 class GetExchangeRatesInteractorTest {
 
-    companion object {
-        private const val BASE_CURRENCY_NAME = "EUR"
-        private const val FLAG_IMAGE_MOCK = "/flag.jpg"
-        private const val CURRENCY_FULL_NAME_MOCK = "US Dollar"
-    }
-
-    private val currencyDataGateway = mock(CurrencyDataGateway::class.java)
-    private val exchangeRatesGateway = mock(ExchangeRatesGateway::class.java)
-
-    private val getExchangeRatesInteractor = GetExchangeRatesInteractor(exchangeRatesGateway, currencyDataGateway)
-
-    private val initialBaseCurrency = CurrencyEntity(name = BASE_CURRENCY_NAME)
-    private val changedBaseCurrency = CurrencyEntity(
-        name = BASE_CURRENCY_NAME,
-        value = 2.0,
-        isBase = true
-    )
-
-    private val ratesResponse = listOf(
-        CurrencyEntity(
-            name = "USD",
-            value = 1.0
-        ),
-        CurrencyEntity(
-            name = "AUD",
-            value = 2.0
-        ),
-        CurrencyEntity(
-            name = "ZAR",
-            value = 3.0
-        )
-    )
+    private val baseCurrency = CurrencyEntity("EUR")
+    private val defaultFactor = 1.0
 
     @Test
-    fun testExchangeRatesInteractor_emptyResponse_emptyCurrencyData() {
+    fun `test no data`() {
 
-        initEmptyCurrencyData()
-        initEmptyRatesGateway()
+        val exchangeRatesGateway = getExchangeRateGatewayWithDefault(listOf())
+        val currencyDetailsGateway = getCurrencyDetailsGatewayWithDefault("", "")
+        val currencyRateStateGateway = CurrencyRateStateImpl(baseCurrency, defaultFactor)
 
-        val testObservable = getExchangeRatesInteractor.execute(initialBaseCurrency).test()
-        val expectedResult = emptyList<CurrencyEntity>()
+        val interactor = GetExchangeRatesInteractor(
+            exchangeRatesGateway,
+            currencyDetailsGateway,
+            currencyRateStateGateway
+        )
 
-        testObservable.assertValue(expectedResult)
+        interactor.execute().test()
+            .assertValueAt(0) { it == CurrencyRateState.NoData }
     }
 
     @Test
-    fun testExchangeRatesInteractor_response_emptyCurrencyData() {
+    fun `test data is exist`() {
 
-        initEmptyCurrencyData()
-        initExchangeRatesResponse()
-
-        val testObservable = getExchangeRatesInteractor.execute(changedBaseCurrency).test()
-        val expectedResult = listOf(
-            CurrencyEntity(
-                name = BASE_CURRENCY_NAME,
-                value = 2.0,
-                isBase = true
-            ),
-            CurrencyEntity(
-                name = "USD",
-                value = 2.0
-            ),
-            CurrencyEntity(
-                name = "AUD",
-                value = 4.0
-            ),
-            CurrencyEntity(
-                name = "ZAR",
-                value = 6.0
-            )
+        val items = listOf(
+            CurrencyEntity(name = "USD", value = 1.0),
+            CurrencyEntity(name = "USD", value = 2.0),
+            CurrencyEntity(name = "USD", value = 3.0)
         )
 
-        testObservable.assertValue(expectedResult)
+        val exchangeRatesGateway = getExchangeRateGatewayWithDefault(items)
+        val currencyDetailsGateway = getCurrencyDetailsGatewayWithDefault("name", "image")
+        val currencyRateStateGateway = CurrencyRateStateImpl(baseCurrency, defaultFactor)
+
+        val interactor = GetExchangeRatesInteractor(
+            exchangeRatesGateway,
+            currencyDetailsGateway,
+            currencyRateStateGateway
+        )
+
+        interactor.execute().test()
+            .assertValueAt(0) { it == CurrencyRateState.NoData }
+            .assertValueAt(1) { it is CurrencyRateState.CurrencyData }
+            .assertValueAt(1) {
+                val expected = CurrencyRateState.CurrencyData(
+                    baseCurrency = baseCurrency.copy(
+                        fullName = "name",
+                        image = "image"
+                    ),
+                    rates = listOf(
+                        CurrencyEntity(
+                            name = "USD",
+                            value = 1.0,
+                            multipleValue = 1.0,
+                            fullName = "name",
+                            image = "image"
+                        ),
+                        CurrencyEntity(
+                            name = "USD",
+                            value = 2.0,
+                            multipleValue = 2.0,
+                            fullName = "name",
+                            image = "image"
+                        ),
+                        CurrencyEntity(
+                            name = "USD",
+                            value = 3.0,
+                            multipleValue = 3.0,
+                            fullName = "name",
+                            image = "image"
+                        )
+                    ),
+                    lastUpdateTime = (it as CurrencyRateState.CurrencyData).lastUpdateTime
+                )
+
+                it == expected
+            }
     }
 
     @Test
-    fun testExchangeRatesInteractor_response_currencyData() {
+    fun `test data not actual`() {
 
-        initCurrencyData()
-        initExchangeRatesResponse()
-
-        val testObservable = getExchangeRatesInteractor.execute(changedBaseCurrency).test()
-        val expectedResult = listOf(
-            CurrencyEntity(
-                name = BASE_CURRENCY_NAME,
-                value = 2.0,
-                isBase = true,
-                fullName = CURRENCY_FULL_NAME_MOCK,
-                image = FLAG_IMAGE_MOCK
-            ),
-            CurrencyEntity(
-                name = "USD",
-                value = 2.0,
-                fullName = CURRENCY_FULL_NAME_MOCK,
-                image = FLAG_IMAGE_MOCK
-            ),
-            CurrencyEntity(
-                name = "AUD",
-                value = 4.0,
-                fullName = CURRENCY_FULL_NAME_MOCK,
-                image = FLAG_IMAGE_MOCK
-            ),
-            CurrencyEntity(
-                name = "ZAR",
-                value = 6.0,
-                fullName = CURRENCY_FULL_NAME_MOCK,
-                image = FLAG_IMAGE_MOCK
-            )
+        val items = listOf(
+            CurrencyEntity(name = "USD", value = 1.0),
+            CurrencyEntity(name = "USD", value = 2.0),
+            CurrencyEntity(name = "USD", value = 3.0)
         )
 
-        testObservable.assertValue(expectedResult)
+        val time = Date()
+        val lastState = CurrencyRateState.CurrencyData(
+            baseCurrency = baseCurrency,
+            rates = items,
+            lastUpdateTime = time
+        )
+        val error = UnknownHostException("host")
+
+        val exchangeRatesGateway = getExchangeRateGatewayWithError(error)
+        val currencyDetailsGateway = getCurrencyDetailsGatewayWithDefault("name", "image")
+
+        val currencyRateStateGateway: CurrencyRateStateGateway = mock {
+            on { getLastCurrencyRateState() } doReturn Observable.just(lastState as CurrencyRateState)
+            on { getFactor() } doReturn Observable.just(1.0)
+            on { getBaseCurrency() } doReturn Observable.just(baseCurrency)
+            on { setCurrencyRateState(any()) } doReturn Completable.complete()
+        }
+
+        val interactor = GetExchangeRatesInteractor(
+            exchangeRatesGateway,
+            currencyDetailsGateway,
+            currencyRateStateGateway
+        )
+
+        interactor.execute().test()
+            .assertValueAt(0) { it is CurrencyRateState.CurrencyData }
+            .assertValueAt(1) { it is CurrencyRateState.NotActualCurrencyData }
+            .assertValueAt(1) {
+                val expected = CurrencyRateState.NotActualCurrencyData(
+                    error = error,
+                    lastData = lastState.copy(
+                        rates = listOf(
+                            CurrencyEntity(
+                                name = "USD",
+                                value = 1.0,
+                                fullName = "name",
+                                image = "image",
+                                multipleValue = 1.0
+                            ),
+                            CurrencyEntity(
+                                name = "USD",
+                                value = 2.0,
+                                fullName = "name",
+                                image = "image",
+                                multipleValue = 2.0
+                            ),
+                            CurrencyEntity(
+                                name = "USD",
+                                value = 3.0,
+                                fullName = "name",
+                                image = "image",
+                                multipleValue = 3.0
+                            )
+                        )
+                    )
+                )
+                it == expected
+            }
     }
 
-    private fun initEmptyCurrencyData() {
-        Mockito.`when`(currencyDataGateway.getFlagForCurrency(any())).thenReturn(null)
-        Mockito.`when`(currencyDataGateway.getNameForCurrency(any())).thenReturn(null)
+    @Test
+    fun `test loading error`() {
+
+        val error = UnknownHostException("host")
+
+        val exchangeRatesGateway = getExchangeRateGatewayWithError(error)
+        val currencyDetailsGateway = getCurrencyDetailsGatewayWithDefault("name", "image")
+        val currencyRateStateGateway = CurrencyRateStateImpl(baseCurrency, defaultFactor)
+
+        val interactor = GetExchangeRatesInteractor(
+            exchangeRatesGateway,
+            currencyDetailsGateway,
+            currencyRateStateGateway
+        )
+
+        interactor.execute().test()
+            .assertValueAt(0) { it == CurrencyRateState.NoData }
+            .assertValueAt(1) { it == CurrencyRateState.LoadingError(error) }
     }
 
-    private fun initEmptyRatesGateway() {
-        Mockito.`when`(exchangeRatesGateway.getRatesByBaseCurrency(any())).thenReturn(Single.just(emptyList()))
+    private fun getExchangeRateGatewayWithDefault(items: List<CurrencyEntity>): ExchangeRatesGateway {
+        return mock {
+            on { getRatesByBaseCurrency(any()) } doReturn Single.fromCallable { items }
+        }
     }
 
-    private fun initExchangeRatesResponse() {
-        val exchangeRatesResponse = listOf(changedBaseCurrency) + ratesResponse
-
-        Mockito.`when`(exchangeRatesGateway.getRatesByBaseCurrency(any()))
-            .thenReturn(Single.just(exchangeRatesResponse))
+    private fun getExchangeRateGatewayWithError(e: Throwable): ExchangeRatesGateway {
+        return mock {
+            on { getRatesByBaseCurrency(any()) } doReturn Single.error(e)
+        }
     }
 
-    private fun initCurrencyData() {
-        Mockito.`when`(currencyDataGateway.getFlagForCurrency(any())).thenReturn(FLAG_IMAGE_MOCK)
-        Mockito.`when`(currencyDataGateway.getNameForCurrency(any())).thenReturn(CURRENCY_FULL_NAME_MOCK)
+    private fun getCurrencyDetailsGatewayWithDefault(
+        name: String,
+        image: String
+    ): CurrencyDetailsGateway {
+        return mock {
+            on { getNameForCurrency(any()) } doReturn name
+            on { getFlagForCurrency(any()) } doReturn image
+        }
     }
 }

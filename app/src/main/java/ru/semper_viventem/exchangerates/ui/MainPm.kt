@@ -1,105 +1,43 @@
 package ru.semper_viventem.exchangerates.ui
 
-import io.reactivex.Observable
-import io.reactivex.rxkotlin.withLatestFrom
 import me.dmdev.rxpm.PresentationModel
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
-import ru.semper_viventem.exchangerates.domain.GetExchangeRatesInteractor
-import timber.log.Timber
-import java.util.concurrent.TimeUnit
+import ru.semper_viventem.exchangerates.domain.CurrencyRateState
+import ru.semper_viventem.exchangerates.domain.interactor.GetExchangeRatesInteractor
+import ru.semper_viventem.exchangerates.domain.interactor.SetBaseCurrencyInteractor
+import ru.semper_viventem.exchangerates.domain.interactor.SetNewFactorInteractor
 
 class MainPm(
-    private val getExchangeRatesInteractor: GetExchangeRatesInteractor
+    private val getExchangeRatesInteractor: GetExchangeRatesInteractor,
+    private val setBaseCurrencyInteractor: SetBaseCurrencyInteractor,
+    private val setNewFactorInteractor: SetNewFactorInteractor
 ) : PresentationModel() {
 
-    companion object {
-        private const val UPDATE_INTERVAL_MILLISECONDS = 1000L
-    }
-
-    val rateAndAnimateTopItem = State(emptyList<CurrencyEntity>() to false)
-    val noInternetConnectionVisible = State(false)
+    val viewState = State<CurrencyRateState>()
 
     val currencySelected = Action<CurrencyEntity>()
-    val baseCurrencyInput = Action<String>()
-    val changeScrollState = Action<Boolean>()
-
-    private val updateTimer = Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
-    private val baseCurrency = State<CurrencyEntity>()
-    private val inScrollState = State(false)
+    val factorInput = Action<String>()
 
     override fun onCreate() {
         super.onCreate()
 
-        updateTimer
-            .filter { !inScrollState.value }
-            .flatMapSingle {
-                getExchangeRatesInteractor.execute(baseCurrency.valueOrNull)
-                    .doOnSuccess {
-                        baseCurrency.consumer.accept(it.first())
-                    }
-                    .map { it to false }
-            }
-            .doOnNext {
-                rateAndAnimateTopItem.consumer.accept(it)
-                noInternetConnectionVisible.consumer.accept(false)
-            }
-            .doOnError { error ->
-                Timber.e(error)
-                noInternetConnectionVisible.consumer.accept(true)
-            }
+        getExchangeRatesInteractor.execute()
+            .doOnNext(viewState.consumer::accept)
             .retry()
             .subscribe()
             .untilDestroy()
 
         currencySelected.observable
-            .filter(::isDifferentBaseElement)
-            .map(::mapToBaseElement)
-            .doOnNext(baseCurrency.consumer)
-            .withLatestFrom(
-                rateAndAnimateTopItem.observable.map { it.first },
-                ::getUpdatedCurrencyList
-            )
-            .subscribe(rateAndAnimateTopItem.consumer)
+            .flatMapCompletable(setBaseCurrencyInteractor::execute)
+            .subscribe()
             .untilDestroy()
 
-        baseCurrencyInput.observable
-            .withLatestFrom(baseCurrency.observable) { newValue, currency ->
-                currency.copy(
-                    value = newValue.toDoubleOrNull() ?: CurrencyEntity.DEFAULT_CURRENCY_VALUE
-                )
+        factorInput.observable
+            .map {
+                it.toDoubleOrNull() ?: if (it.isBlank()) 0.0 else 1.0
             }
-            .subscribe(baseCurrency.consumer)
+            .flatMapCompletable(setNewFactorInteractor::execute)
+            .subscribe()
             .untilDestroy()
-
-        changeScrollState.observable
-            .subscribe(inScrollState.consumer)
-            .untilDestroy()
-    }
-
-    private fun isDifferentBaseElement(newBase: CurrencyEntity): Boolean {
-        return !(baseCurrency.valueOrNull != null && baseCurrency.value.isSameCurrency(newBase))
-    }
-
-    private fun mapToBaseElement(element: CurrencyEntity): CurrencyEntity {
-        return element.copy(value = CurrencyEntity.DEFAULT_CURRENCY_VALUE, isBase = true)
-    }
-
-    private fun getUpdatedCurrencyList(
-        newBase: CurrencyEntity,
-        allCurrency: List<CurrencyEntity>
-    ): Pair<List<CurrencyEntity>, Boolean> {
-        val result = mutableListOf<CurrencyEntity>()
-
-        result.add(newBase)
-
-        allCurrency
-            .sortedBy { it.name }
-            .forEach {
-                if (!it.isSameCurrency(newBase)) {
-                    result.add(it.copy(isBase = false))
-                }
-            }
-
-        return result to true
     }
 }

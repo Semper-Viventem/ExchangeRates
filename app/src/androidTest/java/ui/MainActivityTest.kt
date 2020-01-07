@@ -16,8 +16,14 @@ import org.koin.dsl.bind
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import ru.semper_viventem.exchangerates.R
+import ru.semper_viventem.exchangerates.data.gateway.CurrencyRateStateImpl
+import ru.semper_viventem.exchangerates.data.gateway.ExchangeRatesGatewayImpl
 import ru.semper_viventem.exchangerates.data.network.Api
+import ru.semper_viventem.exchangerates.data.network.response.AllRatesResponse
 import ru.semper_viventem.exchangerates.data.network.response.ExchangeRatesResponse
+import ru.semper_viventem.exchangerates.domain.CurrencyEntity
+import ru.semper_viventem.exchangerates.domain.gateway.CurrencyRateStateGateway
+import ru.semper_viventem.exchangerates.domain.gateway.ExchangeRatesGateway
 import ru.semper_viventem.exchangerates.ui.MainActivity
 import java.net.UnknownHostException
 
@@ -28,32 +34,63 @@ class MainActivityTest : KoinTest {
     @get:Rule
     val activityRule = ActivityTestRule(MainActivity::class.java, false, false)
 
-    private class FakeApi : Api {
-        override fun latest(base: String?): Single<ExchangeRatesResponse> {
-            return Single.error(UnknownHostException())
-        }
+    private val defaultServerResponse = ExchangeRatesResponse(
+        base = "EUR",
+        date = "2018-09-06",
+        ratesResponse = AllRatesResponse(
+            rates = listOf(
+                "USD" to 1.0,
+                "RUB" to 2.0
+            )
+        )
+    )
+    private val baseCurrency = CurrencyEntity("EUR")
 
-    }
+    private val fakeApi = FakeApi()
 
     @Before
     fun setUp() {
         loadKoinModules(module {
-            single(override = true) { FakeApi() } bind Api::class
+            factory(override = true) { fakeApi } bind Api::class
+            factory(override = true) { ExchangeRatesGatewayImpl(get()) } bind ExchangeRatesGateway::class
+            factory(override = true) {
+                CurrencyRateStateImpl(baseCurrency, 1.0)
+            } bind CurrencyRateStateGateway::class
         })
-        activityRule.launchActivity(null)
     }
 
     @Test
     fun testDataInLoading() {
+        activityRule.launchActivity(null)
         onView(withId(R.id.progress))
             .check(matches(isDisplayed()))
     }
 
     @Test
-    fun testErrorMessageIfNoInternet() {
-        Thread.sleep(1000L)
+    fun testDataWasLoadedAndShownInList() {
+        fakeApi.result = Single.just(defaultServerResponse)
+        activityRule.launchActivity(null)
+
+        onView(withId(R.id.recyclerView))
+            .check(matches(hasChildCount(3)))
+    }
+
+    @Test
+    fun testShowErrorMessageIfNoInternet() {
+        fakeApi.result = Single.error(UnknownHostException("host"))
+        activityRule.launchActivity(null)
+
         onView(withId(com.google.android.material.R.id.snackbar_text))
             .check(matches(isDisplayed()))
-            .check(matches(withText(R.string.error_no_internet_connection)))
+            .check(matches(withText(R.string.error_failed)))
+    }
+
+    private class FakeApi : Api {
+
+        var result: Single<ExchangeRatesResponse> = Single.create { }
+
+        override fun latest(base: String?): Single<ExchangeRatesResponse> {
+            return result
+        }
     }
 }

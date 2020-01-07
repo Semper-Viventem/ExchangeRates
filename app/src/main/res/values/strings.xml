@@ -2,6 +2,13 @@
     <string name="app_name">ExchangeRates</string>
     <string name="currency_rate_hint">0.0</string>
 
-    <string name="currency_format">%.2f</string>
+    <string name="rates_title">Rates</string>
+
     <string name="error_no_internet_connection">No internet connection</string>
+    <string name="error_failed">Failed to update. Wait for the network to return</string>
+    <string name="error_failed_with_data">Failed to update. Last update was %1$d %2$s ago</string>
+    <string name="second">second</string>
+    <string name="seconds">seconds</string>
+    <string name="minute">minute</string>
+    <string name="minutes">minutes</string>
 </resources>

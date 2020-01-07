@@ -12,13 +12,16 @@ import ru.semper_viventem.exchangerates.domain.CurrencyEntity
 import ru.semper_viventem.exchangerates.extensions.inflate
 import ru.semper_viventem.exchangerates.extensions.load
 import ru.semper_viventem.exchangerates.extensions.showKeyboard
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.*
 
 class CurrenciesAdapter(
     private val currencySelected: (currency: CurrencyEntity) -> Unit,
     private val baseValueChangeListener: (text: String) -> Unit
 ) : RecyclerView.Adapter<CurrenciesAdapter.ViewHolder>() {
 
-    private var items: List<CurrencyEntity> = listOf()
+    var items: List<CurrencyEntity> = listOf()
     private var needToShowKeyboard: Boolean = false
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
@@ -60,6 +63,9 @@ class CurrenciesAdapter(
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
         private lateinit var item: CurrencyEntity
+        private val decimalFormat = DecimalFormat("0.0#", DecimalFormatSymbols(Locale.ENGLISH))
+
+        private val isFirstElement get() = adapterPosition == 0
         private val changedListener = object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 // do nothing
@@ -70,7 +76,7 @@ class CurrenciesAdapter(
             }
 
             override fun onTextChanged(text: CharSequence, start: Int, before: Int, count: Int) {
-                if (item.isBase) {
+                if (isFirstElement) {
                     baseValueChangeListener.invoke(text.toString())
                 }
             }
@@ -80,7 +86,7 @@ class CurrenciesAdapter(
         init {
             itemView.setOnClickListener { currencySelected.invoke(item) }
             itemView.valueEditText.setOnFocusChangeListener { _, hasFocus ->
-                if (hasFocus) {
+                if (hasFocus && !isFirstElement) {
                     currencySelected.invoke(item)
                 }
             }
@@ -91,13 +97,13 @@ class CurrenciesAdapter(
             with(itemView) {
                 name.text = item.name
                 fullName.text = item.fullName
-                valueEditText.setText(context.getString(R.string.currency_format, item.value))
+                valueEditText.setText(decimalFormat.format(item.multipleValue))
                 currencyImage.load(item.image, true, R.drawable.currency_placeholder)
-                if (needToShowKeyboard && item.isBase) {
+                if (needToShowKeyboard && isFirstElement) {
                     valueEditText.showKeyboard()
                     needToShowKeyboard = false
                 }
-                if (item.isBase) {
+                if (isFirstElement) {
                     valueEditText.addTextChangedListener(changedListener)
                 } else {
                     valueEditText.removeTextChangedListener(changedListener)
