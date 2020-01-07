@@ -18,47 +18,61 @@ class GetExchangeRatesInteractor(
 
     private val updateTimer =
         Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS)
+            .startWith(0)
 
     fun execute(): Observable<CurrencyRateState> {
-
         return combineLatest(
             updateTimer.hide(),
             currencyRateStateGateway.getBaseCurrency(),
             currencyRateStateGateway.getFactor()
-        ).flatMapSingle { (_, baseCurrency, factor) ->
-            currencyRateStateGateway.getLastCurrencyRateState()
-                .firstOrError()
-                .map { lastData -> Triple(baseCurrency, factor, lastData) }
+        )
+            .switchMapSingle { (_, baseCurrency, factor) ->
+                currencyRateStateGateway.getLastCurrencyRateState()
+                    .firstOrError()
+                    .map { lastData -> Triple(baseCurrency, factor, lastData) }
 
-        }.flatMap { (baseCurrency, factor, lastData) ->
-            exchangeRatesGateway.getRatesByBaseCurrency(baseCurrency)
-                .toObservable()
-                .run {
-                    when (lastData) {
-                        is CurrencyRateState.CurrencyData -> this.defaultIfEmpty(lastData.rates)
-                        is CurrencyRateState.NotActualCurrencyData -> this.defaultIfEmpty(lastData.lastData.rates)
-                        else -> this
+            }
+            .switchMap { (baseCurrency, factor, lastData) ->
+                exchangeRatesGateway.getRatesByBaseCurrency(baseCurrency)
+                    .toObservable()
+                    .map {
+                        mapCurrency(
+                            it.sortAndFill(factor),
+                            baseCurrency.fillValues()
+                        )
                     }
-                }
-                .map {
-                    mapCurrency(
-                        it.map { it.fillValues(factor) },
-                        baseCurrency.fillValues()
-                    )
-                }
-                .onErrorReturn { mapCurrencyError(it, lastData, factor) }
-                .flatMap {
-                    currencyRateStateGateway.setCurrencyRateState(it)
-                        .andThen(Observable.just(it))
-                }
-                .run {
-                    if (lastData is CurrencyRateState.NoData) {
-                        this.startWith(lastData)
-                    } else {
-                        this
+                    .onErrorReturn { mapCurrencyError(it, lastData, factor) }
+                    .flatMap {
+                        currencyRateStateGateway.setCurrencyRateState(it)
+                            .andThen(Observable.just(it))
                     }
-                }
-        }
+                    .run {
+                        when (lastData) {
+                            is CurrencyRateState.NoData -> this.startWith(lastData)
+                            is CurrencyRateState.NotActualCurrencyData -> {
+                                this.startWith(
+                                    lastData.copy(
+                                        lastData = lastData.lastData.copy(
+                                            rates = lastData.lastData.rates.sortAndFill(
+                                                factor
+                                            )
+                                        )
+                                    )
+                                )
+                            }
+                            is CurrencyRateState.CurrencyData -> {
+                                this.startWith(
+                                    lastData.copy(
+                                        rates = lastData.rates.sortAndFill(
+                                            factor
+                                        )
+                                    )
+                                )
+                            }
+                            else -> this
+                        }
+                    }
+            }
 
     }
 
@@ -84,16 +98,20 @@ class GetExchangeRatesInteractor(
             is CurrencyRateState.CurrencyData -> CurrencyRateState.NotActualCurrencyData(
                 exception,
                 lastState.copy(
-                    rates = lastState.rates.map { it.fillValues(factor) }
+                    rates = lastState.rates.sortAndFill(factor)
                 )
             )
             is CurrencyRateState.NotActualCurrencyData -> lastState.copy(
                 error = exception,
                 lastData = lastState.lastData.copy(
-                    rates = lastState.lastData.rates.map { it.fillValues(factor) }
+                    rates = lastState.lastData.rates.sortAndFill(factor)
                 )
             )
         }
+    }
+
+    private fun List<CurrencyEntity>.sortAndFill(factor: Double = 1.0): List<CurrencyEntity> {
+        return map { it.fillValues(factor) }.sortedBy { it.name }
     }
 
     private fun CurrencyEntity.fillValues(factor: Double = 1.0): CurrencyEntity {
@@ -106,7 +124,7 @@ class GetExchangeRatesInteractor(
     }
 
     companion object {
-        private const val UPDATE_INTERVAL_MILLISECONDS = 1000L
+        private const val UPDATE_INTERVAL_MILLISECONDS = 2000L
     }
 
 }

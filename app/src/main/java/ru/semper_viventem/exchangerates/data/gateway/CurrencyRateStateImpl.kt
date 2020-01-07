@@ -19,7 +19,6 @@ class CurrencyRateStateImpl(
     override fun setBaseCurrency(baseCurrency: CurrencyEntity): Completable {
         return Completable.fromAction {
             this.baseCurrency.accept(baseCurrency.copy(value = defaultFactor))
-            this.factor.accept(defaultFactor)
         }
     }
 

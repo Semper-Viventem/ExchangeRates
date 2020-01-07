@@ -86,7 +86,7 @@ class CurrenciesAdapter(
         init {
             itemView.setOnClickListener { currencySelected.invoke(item) }
             itemView.valueEditText.setOnFocusChangeListener { _, hasFocus ->
-                if (hasFocus) {
+                if (hasFocus && !isFirstElement) {
                     currencySelected.invoke(item)
                 }
             }
