@@ -3,6 +3,7 @@ package ru.semper_viventem.exchangerates.domain.interactor
 import com.jakewharton.rxrelay2.BehaviorRelay
 import io.reactivex.Observable
 import io.reactivex.rxkotlin.Observables.combineLatest
+import io.reactivex.rxkotlin.Observables.zip
 import ru.semper_viventem.exchangerates.domain.CurrencyEntity
 import ru.semper_viventem.exchangerates.domain.CurrencyRateState
 import ru.semper_viventem.exchangerates.domain.gateway.CurrencyDetailsGateway
@@ -20,8 +21,14 @@ class GetExchangeRatesInteractor(
     private val ticker = BehaviorRelay.createDefault(Unit)
 
     fun execute(): Observable<CurrencyRateState> {
+
+        val multipleTicker = zip(
+            ticker.delay(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS).startWith(Unit),
+            Observable.interval(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS).startWith(0)
+        ).map { Unit }
+
         return combineLatest(
-            ticker.hide().delay(UPDATE_INTERVAL_MILLISECONDS, TimeUnit.MILLISECONDS).startWith(Unit),
+            multipleTicker,
             currencyRateStateGateway.getBaseCurrency(),
             currencyRateStateGateway.getFactor()
         )
